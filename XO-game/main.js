@@ -1,5 +1,4 @@
 function onClick(id) {
-//  isFinish(data);
   let elem = document.getElementById(id);
   let i = id.charAt(0);
   let j = id.charAt(1);
@@ -10,7 +9,6 @@ function onClick(id) {
     elem.classList.remove('w');
     elem.classList.add('x');
     data[i][j] = 'x';
-//    randomInput(data, 'o');
     aiPick();
     renderScore(data);
   } else if (elem.className == 'x'){
@@ -19,7 +17,6 @@ function onClick(id) {
   } else {
     return;
   }
-//  aiCount(data,'x');
   isFinish(data);
   console.log(finishFlag);
   return data;
@@ -39,7 +36,6 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 var wait = async (target) => {
   await delay(500);
   target.innerHTML = 'X';
-//  console.log("X is already here");
 };
 
 function getRandomInt(min, max) {
@@ -59,13 +55,9 @@ function randomInput(array, char) {
         elem.classList.add('o');
         elem.innerHTML = 'O';
       } else if (checkArray(array)) {
-//        console.log('else if');
-//        console.log('X: ' + x + ' Y: ' + y);
         i--;
         continue;
       } else {
-//        console.log('else')
-//        console.log('X: ' + x + ' Y: ' + y);
         return;
       }
     }
@@ -427,7 +419,6 @@ function isFinish(array) {
 }
 
 function xoCount1(char) {
-//  console.log(array);
   let obj = {
     coordinates: [],
     power: ''
@@ -435,19 +426,15 @@ function xoCount1(char) {
   let power = 0;
   let coordinates = [0,0];
   let array_of = getArray();
-//  console.log(array_of);
   for (let i = 0; i < array_of.length; i++) {
     for (let j = 0; j < array_of[i].length; j++) {
       if (array_of[i][j] == 'w') {
         array_of = getArray();
         array_of[i][j] = char;
-//        console.log(array_of);
-        if (fullScore(array_of, char) >= power /*&& fullScore(array_of, char) != 0*/) {
+        if (fullScore(array_of, char) >= power) {
           coordinates[0] = i;
           coordinates[1] = j;
-//          console.log('coordinates: ' + coordinates);
           power = fullScore(array_of, char);
-//          console.log('power: ' + power);
           }
       } else if (array_of[i][j] == 'x' || array_of[i][j] == 'o' || array_of[i][j] == 'b') {
         continue;
@@ -462,7 +449,6 @@ function xoCount1(char) {
 }
 
 function xoCount(char) {
-//  console.log(array);
   let obj = {
     coordinates: [],
     power: ''
@@ -470,19 +456,15 @@ function xoCount(char) {
   let power = 0;
   let coordinates = [0,0];
   let array_of = getArray();
-//  console.log(array_of);
   for (let i = 0; i < array_of.length; i++) {
     for (let j = 0; j < array_of[i].length; j++) {
       if (array_of[i][j] == 'w') {
         array_of = getArray();
         array_of[i][j] = char;
-//        console.log(array_of);
-        if (fullScore(array_of, char) - fullScore(getArray(), char) >= power /*&& fullScore(array_of, char) != 0*/) {
+        if (fullScore(array_of, char) - fullScore(getArray(), char) >= power) {
           coordinates[0] = i;
           coordinates[1] = j;
-//          console.log('coordinates: ' + coordinates);
           power = fullScore(array_of, char) - fullScore(getArray(), char);
-//          console.log('power: ' + power);
           }
       } else if (array_of[i][j] == 'x' || array_of[i][j] == 'o' || array_of[i][j] == 'b') {
         continue;
@@ -496,15 +478,12 @@ function xoCount(char) {
   return obj;
 }
 
-
 function aiPick() {
   let x = xoCount('x');
   let o = xoCount('o');
-//  console.log(x);
-//  console.log(o);
   if (x.power > o.power ) {
     targetInput(data, x.coordinates, 'o');
-  } else if ((x.power < o.power)/* || (x.power == o.power && o.power != 0)*/) {
+  } else if ((x.power < o.power)) {
     targetInput(data, o.coordinates, 'o');
   } else if (x.power == o.power && o.power != 0) {
     let a = getRandomInt(1,3);
@@ -551,73 +530,7 @@ function getArray() {
   }
   return array;
 }
-/*
-  let new_array = [];
-  const old_array = array;
-  let power = 0;
-  let coordinates = [];
-  console.log(new_array);
-  console.log(power);
-  for (let i = 0; i < array.length; i++) {
-    for (let j = 0; j < array[i].length; j++) {
-      new_array = array;
-      console.log(new_array);
-      if (new_array[i][j] == 'w') {
-        new_array[i][j] = 'x';
-      } else {
-        continue;
-      }
-    }
-  }
-
-
-  for (let i = 0; i < array.length; i++) {
-    for (let j = 0; j < array[i].length; j++) {
-      new_array = old_array;
-      console.log(new_array);
-      if (new_array[i][j] == 'w') {
-        new_array[i][j] = char;
-        coordinates[0] = i;
-        coordinates[1] = j;
-        console.log('coordinates: ' + coordinates);
-        if (fullScore(new_array, char) >= power) {
-          power = fullScore(new_array, char);
-          console.log('power: ' + power);
-        }
-      } else if (new_array[i][j] == 'x' || new_array[i][j] == 'o' || new_array[i][j] == 'b') {
-        continue;
-      } else {
-        return;// power;
-      }
-    }
-  }
-
-}
-    for (let i = 0; i < 1; i++) {
-      x = getRandomInt(0, array.length-1);
-      y = getRandomInt(0, array[i].length-1);
-      id = x.toString() + y.toString();
-      elem = document.getElementById(id);
-      if (array[x][y] != char && elem.className == 'w') {
-        array[x][y] = char;
-        elem.classList.remove('w');
-        elem.classList.add('o');
-        elem.innerHTML = 'O';
-      } else if (checkArray(array)) {
-//        console.log('else if');
-//        console.log('X: ' + x + ' Y: ' + y);
-        i--;
-        continue;
-      } else {
-//        console.log('else')
-//        console.log('X: ' + x + ' Y: ' + y);
-        return;
-      }
-    }
-*/
-
 
 var data = createMatrix(5,5);
 var finishFlag = false;
 var langFlag = 'en';
-console.log(data);
