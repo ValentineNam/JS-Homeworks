@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+      <script type="text/javascript" src="main.js"></script>
+      <link href="styles.css" rel="stylesheet">
+    <title> X/O Game </title>
+  </head>
+
+  <body>
+
+    <table align="center">
+      <tr>
+        <th id="lang_header">Language</th>
+        <th>
+          <select size="1" id="lang" onchange="languageChange(this.value)">
+            <option selected value="0">EN</option>
+            <option value="1">RUS</option>
+          </select>
+        </th>
+      </tr>
+    </table>
+
+    <table align="center">
+      <tr>
+        <th id='head' class="header" style="text-align:center">X/O Game</th>
+      </tr>
+    </table>
+
+    <table align="center" class="game" id="tableID" style="cursor: pointer;">
+      <tr>
+        <td id='00' onclick='onClick(this.id)' class='w'></td><td id='01' onclick='onClick(this.id)' class='w'></td><td id='02' onclick='onClick(this.id)' class='w'></td><td id='03' onclick='onClick(this.id)' class='w'></td><td id='04' onclick='onClick(this.id)' class='w'></td>
+      </tr>
+      <tr>
+        <td id='10' onclick='onClick(this.id)' class='w'></td><td id='11' onclick='onClick(this.id)' class='w'></td><td id='12' onclick='onClick(this.id)' class='w'></td><td id='13' onclick='onClick(this.id)' class='w'></td><td id='14' onclick='onClick(this.id)' class='w'></td>
+      </tr>
+      <tr>
+        <td id='20' onclick='onClick(this.id)' class='w'></td><td id='21' onclick='onClick(this.id)' class='w'></td><td id='22' onclick='onClick(this.id)' class='w'></td><td id='23' onclick='onClick(this.id)' class='w'></td><td id='24' onclick='onClick(this.id)' class='w'></td>
+      </tr>
+      <tr>
+        <td id='30' onclick='onClick(this.id)' class='w'></td><td id='31' onclick='onClick(this.id)' class='w'></td><td id='32' onclick='onClick(this.id)' class='w'></td><td id='33' onclick='onClick(this.id)' class='w'></td><td id='34' onclick='onClick(this.id)' class='w'></td>
+      </tr>
+      <tr>
+        <td id='40' onclick='onClick(this.id)' class='w'></td><td id='41' onclick='onClick(this.id)' class='w'></td><td id='42' onclick='onClick(this.id)' class='w'></td><td id='43' onclick='onClick(this.id)' class='w'></td><td id='44' onclick='onClick(this.id)' class='w'></td>
+      </tr>
+    </table>
+
+    <table align="center">
+      <tr>
+        <th id="x_score_head">Score X</th><th id="x_score">0</th><th id="o_score_head">Score O</th><th id="o_score">0</th>
+      </tr>
+    </table>
+
+    <table align="center">
+      <tr>
+        <th>
+        <select size="1" id="rocks_count">
+          <option selected disabled value="0">Count of rocks</option>
+          <option value="0">0</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+        </th>
+      </tr>
+    </table>
+
+    <p align="center">
+      <button id="start_button" onclick="start(data)">START</button>
+    </p>
+
+  </body>
+
+</html>

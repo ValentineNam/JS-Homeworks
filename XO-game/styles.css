@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  background: #F4F1F8;
+}
+table {
+  font-family: "Lucida Grande", sans-serif;
+  background: white;
+  color: #0C213B;
+  border: 10px black;
+  width: 250px;
+}
+.header {
+  height: 25px;
+}
+.game {
+  height: 50px;
+}
+.score {
+  height: 30px;
+}
+th {
+  border: 2px solid #A9E2CC;
+  width: 250px;
+  height: 25px;
+}
+td {
+  width: 43px;
+  height: 43px;
+  padding: 0px;
+  border: 2px solid #A9E2CC;
+  font-size: 35px;
+  text-align: center;
+  table-layout: fixed;
+  overflow:hidden;
+}
+.blck {
+  background: black;
+}
+.x_cell {
+  background: #DAF7A6;
+}
+.o_cell {
+  background: #FFE57B;
+}
+
+tr {
+}
