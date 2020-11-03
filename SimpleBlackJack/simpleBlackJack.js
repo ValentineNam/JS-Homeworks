@@ -33,7 +33,9 @@ function cardsSumm(array) {
 }
 
 function getStatus() {
-    return 'Дилер: ' + dealer.join(' ') + '\n Очков у дилера: ' + cardsSumm(dealer) + '\nИгрок: ' + player.join(' ') + '\n Очков у игрока: ' + cardsSumm(player);
+    return 'Дилер: ' + dealer.join(' ') + '\n Очков у дилера: ' + /
+    cardsSumm(dealer) + '\nИгрок: ' + player.join(' ') + /
+    '\n Очков у игрока: ' + cardsSumm(player);
 }
 
 function game() {
