@@ -18,7 +18,7 @@ function onClick(id) {
     return;
   }
   isFinish(data);
-  console.log(finishFlag);
+//  console.log(finishFlag);
   return data;
 }
 
