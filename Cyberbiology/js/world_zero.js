@@ -37,7 +37,7 @@ function GenomVM(botGenom) {
 	let adr = 0;
 
 	let energy = 999;
-	let direction = 0; //направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
+	let direction = 0; //* направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
 	let posX = 1;
 	let posY = 1;
 
@@ -47,37 +47,37 @@ function GenomVM(botGenom) {
 				adr = incAdr(adr);
 				genomMutate(botGenom);
 				actCounter--;
-				console.log("Mutate and Go To: " + adr);
-				console.log(botGenom);
+				// console.log("Mutate and Go To: " + adr);
+				// console.log(botGenom);
 				break;
 			case 1:
 				adr = incAdr(adr);
 				actCounter--;
-				console.log("1 Go To adr: " + adr);
+				// console.log("1 Go To adr: " + adr);
 				break;
 			case 2:
 				adr = jumpAdr(adr, 2);
 				actCounter--;
-				console.log("2 Go To adr: " + adr);
+				// console.log("2 Go To adr: " + adr);
 				break;
 			case 3:
 				adr = jumpAdr(adr, 3);
 				actCounter--;
-				console.log("3 Go To adr: " + adr);
+				// console.log("3 Go To adr: " + adr);
 				break;
 			case 4:
 				adr = jumpAdr(adr, 4);
 				actCounter--;
-				console.log("4 Go To adr: " + adr);
+				// console.log("4 Go To adr: " + adr);
 				break;
 			case 5:
 				adr = jumpAdr(adr, 5);
 				actCounter--;
-				console.log("5 Go To adr: " + adr);
+				// console.log("5 Go To adr: " + adr);
 				break;
 			default:
 				adr = 0;
-				console.log("Bad jump. Go To adr: " + adr);
+				// console.log("Bad jump. Go To adr: " + adr);
 				breakFlag = 1;
 				break;
 		}
@@ -105,6 +105,7 @@ function genomMutate(botGenom) {
 	return botGenom;
 }
 
+// TODO: функция проверки объекта в направлении взягляда бота
 function botCheckDirection(botGenom) {
 	
 }
@@ -128,22 +129,33 @@ function decEnergy(energy, increment) {
 
 bot_obj = {
 	energy: 999,
-	direction: 0, //направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
+	direction: 0, //* направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
 	posX: 1,
 	posY: 1,
 	genom: GENOM
 }
 
-let worldMatrix = Create2DArray(WORLD_X,WORLD_Y);
-
 function pullTheWorld(arr) {
 	for(let j = 0; j < arr.length; j++) {
 		for(let i = 0; i < arr[j].length; i++) {
 			arr[j][i] = ''+ i + j;
+			// TODO: здесь должна быть функция добавления объектов на землю
 		}
 	}
 	return arr;
 }
+
+// TODO: один такт местного времени
+function tick(params) {
+	return
+}
+
+// TODO: отрисовка канваса, должна вызываться каждый тик
+function render(params) {
+	return
+}
+
+let worldMatrix = Create2DArray(WORLD_X,WORLD_Y);
 
 pullTheWorld(worldMatrix);
 
