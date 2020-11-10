@@ -8,6 +8,42 @@ const WORLD_X = 5;
 const WORLD_Y = 5;
 let bot_obj = {};
 
+let bot = {
+    objType: 'bot',
+    energy: [100,1024],
+    age: [100,1024],
+    minerals: [100,256],
+    posX: 0,
+    posY: 0,
+    direction: 0,
+    speed: 100,
+    flagAttacked: 0,
+    flagSleeping: 0,
+    flagHungry: 0,
+    flagAlive: 1,
+    genom: []
+}
+
+let tree = {
+    objType: 'tree',
+    energy: [200,2048],
+    age: [200,2048],
+    minerals: [200,2048],
+    posX: 1,
+	posY: 1,
+	flagAlive: 1  
+}
+
+let mineral = {
+    objType: 'mineral',
+    energy: [20,256],
+    age: [200,4096],
+    minerals: [2048,2048],
+    posX: 1,
+	posY: 1,
+	flagAlive: 1  
+}
+
 for (let i = GENOM_LENGTH; i > 0; i--) {
 	GENOM.push(getRandomInt(0, 5));
 }
@@ -18,7 +54,7 @@ function Create2DArray(rows = 5, columns = 5) {
 		x[i] = new Array(columns);
 	}
 	return x;
- }
+}
 
 function getRandomInt(min, max) {
 	if (min < max) {
@@ -135,10 +171,20 @@ bot_obj = {
 	genom: GENOM
 }
 
+// TODO: Tree VM
+function treeVM(params) {
+	return
+}
+
+// TODO: Minerals VM
+function mineralsVM(params) {
+	return
+}
+
 function pullTheWorld(arr) {
 	for(let j = 0; j < arr.length; j++) {
 		for(let i = 0; i < arr[j].length; i++) {
-			arr[j][i] = ''+ i + j;
+			arr[j][i] = bot_obj;
 			// TODO: здесь должна быть функция добавления объектов на землю
 		}
 	}
