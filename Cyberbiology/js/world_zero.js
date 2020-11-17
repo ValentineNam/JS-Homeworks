@@ -89,17 +89,20 @@ function main() {
 	// });
 }
 
-function GenomVM(botGenom) {
+function GenomVM(botObject) {
 	let breakFlag = 0;
 	let actCounter = 16;
 	let adr = 0;
 
-	let energy = 999;
-	let direction = 0; //* направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
-	let posX = 1;
-	let posY = 1;
+	let energy = botObject.energy;
+	let direction = botObject.direction; //* направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
+	let posX = botObject.posX;
+	let posY = botObject.posY;
+
+	let botGenom = botObject.genom;
 
 	while (breakFlag != 1 && actCounter > 0) {
+		// console.log(`Action counter: ${actCounter}`);
 		switch (botGenom[adr]) {
 			case 0:
 				adr = incAdr(adr);
@@ -219,7 +222,7 @@ function decEnergy(energy, increment) {
 	return energy;
 }
 
-function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = 16) {
+function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = 5) {
 	let GENOM = [];
 	for (let x = genomLength; x > 0; x--) {
 		GENOM.push(getRandomInt(genomLowAdr, genomHighAdr));
@@ -232,7 +235,7 @@ bot_obj = {
 	direction: 0, //* направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
 	posX: 0,
 	posY: 0,
-	genom: []
+	genom: randomGenomGenerator(GENOM_LENGTH, 0, 5)
 }
 
 // TODO: Tree VM
@@ -287,8 +290,8 @@ function render(params) {
 
 //console.log(worldMatrix);
 
-//console.log(bot_obj.genom);
-//GenomVM(bot_obj.genom);
+console.log(bot_obj);
+GenomVM(bot_obj);
 //console.log(bot_obj.genom);
 
 //console.log(GENOM);
