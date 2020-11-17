@@ -292,4 +292,4 @@ function render(params) {
 //console.log(bot_obj.genom);
 
 //console.log(GENOM);
-main();
+//main();
