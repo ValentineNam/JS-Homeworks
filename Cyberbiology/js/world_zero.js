@@ -2,10 +2,10 @@
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGTH = 600;
-const GENOM = [];
+// const GENOM = [];
 const GENOM_LENGTH = 16;
-const WORLD_X = 5;
-const WORLD_Y = 5;
+const WORLD_X = 2;
+const WORLD_Y = 2;
 let bot_obj = {};
 
 let bot = {
@@ -44,9 +44,9 @@ let mineral = {
 	flagAlive: 1  
 }
 
-for (let i = GENOM_LENGTH; i > 0; i--) {
-	GENOM.push(getRandomInt(0, 5));
-}
+// for (let i = GENOM_LENGTH; i > 0; i--) {
+// 	GENOM.push(getRandomInt(0, 5));
+// }
 
 function Create2DArray(rows = 5, columns = 5) {
 	let x = new Array(rows);
@@ -66,6 +66,28 @@ function getRandomInt(min, max) {
 
 //console.log(GENOM);
 //console.log("Genom length is: " + GENOM.length);
+
+//!  Почему-то работает не корректно...
+function main() {
+	let worldMatrix = Create2DArray(WORLD_X,WORLD_Y);
+	pullTheWorld(worldMatrix);
+	for(let j = 0; j < worldMatrix.length; j++) {
+		for(let i = 0; i < worldMatrix[j].length; i++) {
+			let elem = worldMatrix[j][i];
+			// console.log(elem);
+			GenomVM(elem.genom);
+			console.log(`x: ${elem.posX}, y: ${elem.posY}`);
+			console.log(elem.genom);
+		}
+	}
+	// worldMatrix.forEach(element => {
+	// 	element.forEach(elem => {
+	// 		GenomVM(elem.genom);
+	// 		console.log(`x: ${elem.posX}, y: ${elem.posY}`);
+	// 		console.log(elem.genom);
+	// 	});
+	// });
+}
 
 function GenomVM(botGenom) {
 	let breakFlag = 0;
@@ -142,9 +164,43 @@ function genomMutate(botGenom) {
 }
 
 // TODO: функция проверки объекта в направлении взягляда бота
-function botCheckDirection(botGenom) {
-	
+function botCheckDirection(objType) {
+	// ToDo: дописать передачу координат и типа объекта
+	// если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1
+	let x;
+	switch (objType) {
+		case 'space':
+			x = 0;
+			break;
+		case 'relative':
+			x = 1;
+			break;
+		case 'stranger':
+			x = 2;
+			break;
+		case 'tree':
+			x = 3;
+			break;
+		case 'mineral':
+			x = 4;
+			break;
+		case 'wall':
+			x = -1;
+			break;
+		default:
+			x = 255;
+			break;
+	}
+	return x;
 }
+
+// console.log(botCheckDirection('space'));
+// console.log(botCheckDirection('relative'));
+// console.log(botCheckDirection('stranger'));
+// console.log(botCheckDirection('tree'));
+// console.log(botCheckDirection('mineral'));
+// console.log(botCheckDirection('wall'));
+// console.log(botCheckDirection('somethingElse'));
 
 function incEnergy(energy, increment) {
 	(energy + increment <= 999) ?
@@ -163,12 +219,20 @@ function decEnergy(energy, increment) {
 	return energy;
 }
 
+function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = 16) {
+	let GENOM = [];
+	for (let x = genomLength; x > 0; x--) {
+		GENOM.push(getRandomInt(genomLowAdr, genomHighAdr));
+	};
+	return GENOM;
+}
+
 bot_obj = {
 	energy: 999,
 	direction: 0, //* направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
-	posX: 1,
-	posY: 1,
-	genom: GENOM
+	posX: 0,
+	posY: 0,
+	genom: []
 }
 
 // TODO: Tree VM
@@ -181,10 +245,26 @@ function mineralsVM(params) {
 	return
 }
 
+// TODO: Create new bot
+function createBot(params) {
+	return
+}
+
+// TODO: Create new child
+function createChild(params) {
+	return
+}
+
 function pullTheWorld(arr) {
 	for(let j = 0; j < arr.length; j++) {
 		for(let i = 0; i < arr[j].length; i++) {
 			arr[j][i] = bot_obj;
+//			console.log(arr[j][i])
+			arr[j][i].energy = getRandomInt(0, 999);
+			arr[j][i].posX = j;
+			arr[j][i].posY = i;
+			arr[j][i].genom = randomGenomGenerator(GENOM_LENGTH, 0, 5);
+			console.log(arr[j][i]);
 			// TODO: здесь должна быть функция добавления объектов на землю
 		}
 	}
@@ -201,13 +281,15 @@ function render(params) {
 	return
 }
 
-let worldMatrix = Create2DArray(WORLD_X,WORLD_Y);
+//let worldMatrix = Create2DArray(WORLD_X,WORLD_Y);
 
-pullTheWorld(worldMatrix);
+//pullTheWorld(worldMatrix);
 
-console.log(worldMatrix);
+//console.log(worldMatrix);
 
+//console.log(bot_obj.genom);
 //GenomVM(bot_obj.genom);
+//console.log(bot_obj.genom);
 
 //console.log(GENOM);
-
+main();
