@@ -4,8 +4,8 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGTH = 600;
 // const GENOM = [];
 const GENOM_LENGTH = 16;
-const WORLD_X = 2;
-const WORLD_Y = 2;
+const WORLD_X = 5;
+const WORLD_Y = 5;
 let bot_obj = {};
 
 let bot = {
@@ -48,7 +48,7 @@ let mineral = {
 // 	GENOM.push(getRandomInt(0, 5));
 // }
 
-function Create2DArray(rows = 5, columns = 5) {
+function create2DArray(rows = 5, columns = 5) {
 	let x = new Array(rows);
 	for (let i = 0; i < rows; i++) {
 		x[i] = new Array(columns);
@@ -69,7 +69,7 @@ function getRandomInt(min, max) {
 
 //!  Почему-то работает не корректно...
 function main() {
-	let worldMatrix = Create2DArray(WORLD_X,WORLD_Y);
+	let worldMatrix = create2DArray(WORLD_X,WORLD_Y);
 	pullTheWorld(worldMatrix);
 	for(let j = 0; j < worldMatrix.length; j++) {
 		for(let i = 0; i < worldMatrix[j].length; i++) {
@@ -280,18 +280,32 @@ function tick(params) {
 }
 
 // TODO: отрисовка канваса, должна вызываться каждый тик
-function render(params) {
-	return
+function render(arr) {
+	// setTimeout(() => console.clear(), 1000);
+	for(let j = 0; j < arr.length; j++) {
+		let line = '';
+		for(let i = 0; i < arr[j].length; i++) {
+			if (arr[j][i] != undefined && arr[j][i].objType == 'bot') {
+				line += 'x';
+			}
+			else {
+				line += 'o';
+			}
+		}
+		console.log(line);
+	}
 }
 
-//let worldMatrix = Create2DArray(WORLD_X,WORLD_Y);
+let worldMatrix = create2DArray(WORLD_X,WORLD_Y);
+bot.genom = randomGenomGenerator(16,0,5);
+worldMatrix[2][2] = bot;
+// pullTheWorld(worldMatrix);
 
-//pullTheWorld(worldMatrix);
+console.log(worldMatrix);
+render(worldMatrix);
 
-//console.log(worldMatrix);
-
-console.log(bot_obj);
-GenomVM(bot_obj);
+//console.log(bot_obj);
+//GenomVM(bot_obj);
 //console.log(bot_obj.genom);
 
 //console.log(GENOM);
