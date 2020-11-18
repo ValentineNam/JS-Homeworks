@@ -296,7 +296,7 @@ function render(arr) {
 	}
 }
 
-//ToDo: Вычисление координат клетки в направлении взгляда бота
+//Вычисление координат клетки в направлении взгляда бота
 function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 	let coordsXY = [undefined, undefined];
 	if (viewDirection != 0) {
@@ -309,34 +309,34 @@ function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 				}
 				break;
 			case 2:
-				if (botPosX < WORLD_X && botPosY != 0) {
+				if (botPosX < WORLD_X - 1 && botPosY != 0) {
 					coordsXY = [botPosX + 1, botPosY - 1];	
 				} else {
 					return -1;
 				}
 				break;
 			case 3:
-				if (botPosX < WORLD_X) {
+				if (botPosX < WORLD_X - 1) {
 					coordsXY = [botPosX + 1, botPosY];	
 				} else {
 					return -1;
 				}
 				break;
 			case 4:
-			if (botPosX < WORLD_X && botPosY < WORLD_Y) {
+			if (botPosX < WORLD_X - 1 && botPosY < WORLD_Y - 1) {
 				coordsXY = [botPosX + 1, botPosY + 1];	
 			} else {
 				return -1;
 			}
 			break;
 			case 5:
-			if (botPosY < WORLD_Y) {
+			if (botPosY < WORLD_Y - 1) {
 				coordsXY = [botPosX, botPosY + 1];	
 			} else {
 				return -1;
 			}
 			case 6:
-			if (botPosX > 0 && botPosY < WORLD_Y) {
+			if (botPosX > 0 && botPosY < WORLD_Y - 1) {
 				coordsXY = [botPosX - 1, botPosY + 1];	
 			} else {
 				return -1;
@@ -375,23 +375,23 @@ worldMatrix[2][2] = bot;
 // console.log(getFrontCellCoordinates(1, 2, 3));
 // console.log(getFrontCellCoordinates(1, 2, 1));
 // console.log(getFrontCellCoordinates(1, 2, 0));
-// console.log(getFrontCellCoordinates(2, 4, 1));
+// console.log(getFrontCellCoordinates(2, 3, 1));
 // console.log(getFrontCellCoordinates(2, 4, 0));
-// console.log(getFrontCellCoordinates(2, 5, 1));
+// console.log(getFrontCellCoordinates(2, 4, 1));
 // console.log(getFrontCellCoordinates(3, 4, 1));
 // console.log(getFrontCellCoordinates(3, 4, 0));
-// console.log(getFrontCellCoordinates(3, 5, 1));
+// console.log(getFrontCellCoordinates(3, 4, 1));
 // console.log(getFrontCellCoordinates(4, 4, 1));
-// console.log(getFrontCellCoordinates(4, 4, 5));
-// console.log(getFrontCellCoordinates(4, 5, 5));
+// console.log(getFrontCellCoordinates(4, 3, 4));
+// console.log(getFrontCellCoordinates(4, 4, 3));
 // console.log(getFrontCellCoordinates(5, 4, 1));
 // console.log(getFrontCellCoordinates(5, 4, 0));
-// console.log(getFrontCellCoordinates(5, 4, 5));
+// console.log(getFrontCellCoordinates(5, 4, 4));
 // console.log(getFrontCellCoordinates(6, 1, 4));
-// console.log(getFrontCellCoordinates(6, 1, 5));
+// console.log(getFrontCellCoordinates(6, 1, 4));
 // console.log(getFrontCellCoordinates(6, 0, 4));
 // console.log(getFrontCellCoordinates(7, 1, 0));
-// console.log(getFrontCellCoordinates(7, 1, 5));
+// console.log(getFrontCellCoordinates(7, 1, 4));
 // console.log(getFrontCellCoordinates(7, 0, 4));
 // console.log(getFrontCellCoordinates(8, 1, 1));
 // console.log(getFrontCellCoordinates(8, 1, 0));
