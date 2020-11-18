@@ -296,13 +296,106 @@ function render(arr) {
 	}
 }
 
+//ToDo: Вычисление координат клетки в направлении взгляда бота
+function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
+	let coordsXY = [undefined, undefined];
+	if (viewDirection != 0) {
+		switch (viewDirection) {
+			case 1:
+				if (botPosY != 0) {
+					coordsXY = [botPosX, botPosY - 1];	
+				} else {
+					return -1;
+				}
+				break;
+			case 2:
+				if (botPosX < WORLD_X && botPosY != 0) {
+					coordsXY = [botPosX + 1, botPosY - 1];	
+				} else {
+					return -1;
+				}
+				break;
+			case 3:
+				if (botPosX < WORLD_X) {
+					coordsXY = [botPosX + 1, botPosY];	
+				} else {
+					return -1;
+				}
+				break;
+			case 4:
+			if (botPosX < WORLD_X && botPosY < WORLD_Y) {
+				coordsXY = [botPosX + 1, botPosY + 1];	
+			} else {
+				return -1;
+			}
+			break;
+			case 5:
+			if (botPosY < WORLD_Y) {
+				coordsXY = [botPosX, botPosY + 1];	
+			} else {
+				return -1;
+			}
+			case 6:
+			if (botPosX > 0 && botPosY < WORLD_Y) {
+				coordsXY = [botPosX - 1, botPosY + 1];	
+			} else {
+				return -1;
+			}
+			break;
+			case 7:
+			if (botPosX > 0) {
+				coordsXY = [botPosX - 1, botPosY];	
+			} else {
+				return -1;
+			}
+			break;
+			case 8:
+			if (botPosX > 0 && botPosY > 0) {
+				coordsXY = [botPosX - 1, botPosY - 1];	
+			} else {
+				return -1;
+			}
+			break;
+
+			default:
+				return -1;
+				// break;
+		}
+	}
+	return coordsXY;
+}
+
 let worldMatrix = create2DArray(WORLD_X,WORLD_Y);
-bot.genom = randomGenomGenerator(16,0,5);
+bot.genom = randomGenomGenerator(16, 0, 5);
 worldMatrix[2][2] = bot;
 // pullTheWorld(worldMatrix);
 
-console.log(worldMatrix);
-render(worldMatrix);
+// console.log(worldMatrix);
+// render(worldMatrix);
+// console.log(getFrontCellCoordinates(1, 2, 3));
+// console.log(getFrontCellCoordinates(1, 2, 1));
+// console.log(getFrontCellCoordinates(1, 2, 0));
+// console.log(getFrontCellCoordinates(2, 4, 1));
+// console.log(getFrontCellCoordinates(2, 4, 0));
+// console.log(getFrontCellCoordinates(2, 5, 1));
+// console.log(getFrontCellCoordinates(3, 4, 1));
+// console.log(getFrontCellCoordinates(3, 4, 0));
+// console.log(getFrontCellCoordinates(3, 5, 1));
+// console.log(getFrontCellCoordinates(4, 4, 1));
+// console.log(getFrontCellCoordinates(4, 4, 5));
+// console.log(getFrontCellCoordinates(4, 5, 5));
+// console.log(getFrontCellCoordinates(5, 4, 1));
+// console.log(getFrontCellCoordinates(5, 4, 0));
+// console.log(getFrontCellCoordinates(5, 4, 5));
+// console.log(getFrontCellCoordinates(6, 1, 4));
+// console.log(getFrontCellCoordinates(6, 1, 5));
+// console.log(getFrontCellCoordinates(6, 0, 4));
+// console.log(getFrontCellCoordinates(7, 1, 0));
+// console.log(getFrontCellCoordinates(7, 1, 5));
+// console.log(getFrontCellCoordinates(7, 0, 4));
+// console.log(getFrontCellCoordinates(8, 1, 1));
+// console.log(getFrontCellCoordinates(8, 1, 0));
+// console.log(getFrontCellCoordinates(8, 0, 4));
 
 //console.log(bot_obj);
 //GenomVM(bot_obj);
