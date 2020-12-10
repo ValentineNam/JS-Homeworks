@@ -111,7 +111,14 @@ function GenomVM(botObject) {
 				// console.log("Mutate and Go To: " + adr);
 				// console.log(botGenom);
 				break;
-			case 1:
+			case 1: //Move front
+				let frontCoordinates = getFrontCellCoordinates(botObject.direction, posX, posY);
+				if (frontCoordinates != -1) {
+					//ToDo: Понять что тут должно быть
+					let frontObject = worldMatrix[frontCoordinates[0],frontCoordinates[1]];
+					let x = botCheckDirection(frontObject.objType); 
+					x != -1? true: false;
+				};
 				adr = incAdr(adr);
 				actCounter--;
 				// console.log("1 Go To adr: " + adr);
@@ -258,6 +265,28 @@ function createChild(params) {
 	return
 }
 
+// TODO: Check genom diffs
+function isRelative(a, b) {
+	let x = -1;
+	const MAX_DIFF = 2;
+	let diff = 0;
+	if (a.length == b.length) {
+		for (let i = 0; i < a.length; i++) {
+			if (a[i] != b[i]) {
+				diff++;
+			}
+			if (diff > MAX_DIFF) {
+				x = 0;
+				break;
+			}
+		}
+		if (diff <= MAX_DIFF) {
+			x = 1;
+		}
+	}
+	return x; // -1 разного размера геномы, 0 не родственники, 1 родственники
+}
+
 function pullTheWorld(arr) {
 	for(let j = 0; j < arr.length; j++) {
 		for(let i = 0; i < arr[j].length; i++) {
@@ -279,7 +308,7 @@ function tick(params) {
 	return
 }
 
-// TODO: отрисовка канваса, должна вызываться каждый тик
+// TODO: отрисовка канваса - должна вызываться каждый тик. Пока что рисуем просто в консольку
 function render(arr) {
 	// setTimeout(() => console.clear(), 1000);
 	for(let j = 0; j < arr.length; j++) {
@@ -297,6 +326,7 @@ function render(arr) {
 }
 
 //Вычисление координат клетки в направлении взгляда бота
+// Прости меня будущий я, но как это сделать иначе мне не понятно 18.11.20
 function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 	let coordsXY = [undefined, undefined];
 	if (viewDirection != 0) {
@@ -362,7 +392,7 @@ function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 				// break;
 		}
 	}
-	return coordsXY;
+	return coordsXY; //[x,y] || -1
 }
 
 let worldMatrix = create2DArray(WORLD_X,WORLD_Y);
@@ -371,7 +401,7 @@ worldMatrix[2][2] = bot;
 // pullTheWorld(worldMatrix);
 
 // console.log(worldMatrix);
-// render(worldMatrix);
+render(worldMatrix);
 // console.log(getFrontCellCoordinates(1, 2, 3));
 // console.log(getFrontCellCoordinates(1, 2, 1));
 // console.log(getFrontCellCoordinates(1, 2, 0));
@@ -403,3 +433,13 @@ worldMatrix[2][2] = bot;
 
 //console.log(GENOM);
 //main();
+// let g0 = [1,2,3], g1 = [1,2,3,4,5], g2 = [1,2,3,0,0], g3 = [0,0,0,4,5];
+
+// console.log('-1');
+// console.log(isRelative(g0,g1));
+
+// console.log('1');
+// console.log(isRelative(g1,g2));
+
+// console.log('0');
+// console.log(isRelative(g2,g3));
