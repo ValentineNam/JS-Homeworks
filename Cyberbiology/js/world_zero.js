@@ -401,7 +401,7 @@ worldMatrix[2][2] = bot;
 // pullTheWorld(worldMatrix);
 
 // console.log(worldMatrix);
-// render(worldMatrix);
+render(worldMatrix);
 // console.log(getFrontCellCoordinates(1, 2, 3));
 // console.log(getFrontCellCoordinates(1, 2, 1));
 // console.log(getFrontCellCoordinates(1, 2, 0));
