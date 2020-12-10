@@ -428,7 +428,7 @@ worldMatrix[2][2] = bot;
 // console.log(getFrontCellCoordinates(8, 0, 4));
 
 //console.log(bot_obj);
-//GenomVM(bot_obj);
+GenomVM(bot_obj);
 //console.log(bot_obj.genom);
 
 //console.log(GENOM);
