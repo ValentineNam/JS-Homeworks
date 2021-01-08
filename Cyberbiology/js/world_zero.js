@@ -8,20 +8,24 @@ const WORLD_X = 5;
 const WORLD_Y = 5;
 let bot_obj = {};
 
+const emptySpace = {
+	objType: 'space'
+}
+
 let bot = {
     objType: 'bot',
     energy: [100,1024],
     age: [100,1024],
     minerals: [100,256],
-    posX: 0,
-    posY: 0,
-    direction: 0,
+    posX: 3,
+    posY: 3,
+	direction: 6,
     speed: 100,
     flagAttacked: 0,
     flagSleeping: 0,
     flagHungry: 0,
     flagAlive: 1,
-    genom: []
+    genom: []//[0,1,2,3,4,5]
 }
 
 let tree = {
@@ -67,7 +71,7 @@ function getRandomInt(min, max) {
 //console.log(GENOM);
 //console.log("Genom length is: " + GENOM.length);
 
-//!  Почему-то работает не корректно...
+// !  Почему-то работает не корректно...
 function main() {
 	let worldMatrix = create2DArray(WORLD_X,WORLD_Y);
 	pullTheWorld(worldMatrix);
@@ -95,9 +99,9 @@ function GenomVM(botObject) {
 	let adr = 0;
 
 	let energy = botObject.energy;
-	let direction = botObject.direction; //* направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
-	let posX = botObject.posX;
-	let posY = botObject.posY;
+	// let direction = botObject.direction; // * направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
+	// let posX = botObject.posX;
+	// let posY = botObject.posY;
 
 	let botGenom = botObject.genom;
 
@@ -109,15 +113,25 @@ function GenomVM(botObject) {
 				genomMutate(botGenom);
 				actCounter--;
 				// console.log("Mutate and Go To: " + adr);
-				// console.log(botGenom);
+				console.log(botGenom);
 				break;
-			case 1: //Move front
-				let frontCoordinates = getFrontCellCoordinates(botObject.direction, posX, posY);
+			case 1: // Move front
+			// Понять, что за координаты спереди (по линии взгляда)
+			// Если не смотрит никуда (спит), то переходим к команде в адресе +1
+			// Если спереди есть стена, то переходим к команде в адресе +2
+			// Если спереди пустое пространство, то переходим к команде в адресе +3
+			console.log(`X = ${botObject.posX}, Y = ${botObject.posY}`);
+				let frontCoordinates = getFrontCellCoordinates(botObject.direction, botObject.posX, botObject.posY);
+				// console.log(`Direction is ${botObject.direction}`);
+				// console.log(`Front coord is ${frontCoordinates}`);
+				// console.log(`Front object on ${frontCoordinates[0]} ${frontCoordinates[1]}`);
 				if (frontCoordinates != -1) {
-					//ToDo: Понять что тут должно быть
+					// TODO: Понять что тут должно быть
 					let frontObject = worldMatrix[frontCoordinates[0],frontCoordinates[1]];
-					let x = botCheckDirection(frontObject.objType); 
-					x != -1? true: false;
+					// if (botCheckDirection(frontObject.objType) != undefined) {
+					// 	let x = botCheckDirection(frontObject.objType); 
+					// 	x != -1? true: false;
+					// };
 				};
 				adr = incAdr(adr);
 				actCounter--;
@@ -173,10 +187,12 @@ function genomMutate(botGenom) {
 	return botGenom;
 }
 
-// TODO: функция проверки объекта в направлении взягляда бота
-function botCheckDirection(objType) {
-	// ToDo: дописать передачу координат и типа объекта
-	// если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1
+// TODO: функция проверки объекта в указанных координатах
+function botCheckDirection(botGenom, worldArray, coordX, coordY) { //получаем координаты, возвращаем ответ 
+	// если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
+	// TODO: дописать передачу координат и определение типа объекта
+	let objType = worldArray[coordX,coordY].objType;
+	(objType != undefined) ? console.log(`${objType} positive`) : console.log(`${objType} negative`);
 	let x;
 	switch (objType) {
 		case 'space':
@@ -203,14 +219,6 @@ function botCheckDirection(objType) {
 	}
 	return x;
 }
-
-// console.log(botCheckDirection('space'));
-// console.log(botCheckDirection('relative'));
-// console.log(botCheckDirection('stranger'));
-// console.log(botCheckDirection('tree'));
-// console.log(botCheckDirection('mineral'));
-// console.log(botCheckDirection('wall'));
-// console.log(botCheckDirection('somethingElse'));
 
 function incEnergy(energy, increment) {
 	(energy + increment <= 999) ?
@@ -265,6 +273,15 @@ function createChild(params) {
 	return
 }
 
+// TODO: Check flags
+function checkFlags(params) {
+	return
+}
+
+// TODO: Change direction
+function changeDirection(params) {
+	return
+}
 // TODO: Check genom diffs
 function isRelative(a, b) {
 	let x = -1;
@@ -303,6 +320,16 @@ function pullTheWorld(arr) {
 	return arr;
 }
 
+function createSpace(arr) {
+	for(let j = 0; j < arr.length; j++) {
+		for(let i = 0; i < arr[j].length; i++) {
+			arr[j][i] = emptySpace;
+			// console.log(arr[j][i]);
+		}
+	}
+	return arr;
+}
+
 // TODO: один такт местного времени
 function tick(params) {
 	return
@@ -325,10 +352,10 @@ function render(arr) {
 	}
 }
 
-//Вычисление координат клетки в направлении взгляда бота
+// Вычисление координат клетки в направлении взгляда бота
 // Прости меня будущий я, но как это сделать иначе мне не понятно 18.11.20
 function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
-	let coordsXY = [undefined, undefined];
+	let coordsXY = -1;
 	if (viewDirection != 0) {
 		switch (viewDirection) {
 			case 1:
@@ -391,15 +418,20 @@ function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 				return -1;
 				// break;
 		}
+	} else if (viewDirection == 0) {
+		coordsXY = -1;
 	}
 	return coordsXY; //[x,y] || -1
 }
 
 let worldMatrix = create2DArray(WORLD_X,WORLD_Y);
+createSpace(worldMatrix);
 bot.genom = randomGenomGenerator(16, 0, 5);
 worldMatrix[2][2] = bot;
 // pullTheWorld(worldMatrix);
-
+// console.log(worldMatrix[2,2]);
+console.log(worldMatrix);
+botCheckDirection(bot.genom, worldMatrix, 2, 2)
 // console.log(worldMatrix);
 // render(worldMatrix);
 // console.log(getFrontCellCoordinates(1, 2, 3));
@@ -428,7 +460,7 @@ worldMatrix[2][2] = bot;
 // console.log(getFrontCellCoordinates(8, 0, 4));
 
 //console.log(bot_obj);
-GenomVM(bot_obj);
+GenomVM(bot);
 //console.log(bot_obj.genom);
 
 //console.log(GENOM);
