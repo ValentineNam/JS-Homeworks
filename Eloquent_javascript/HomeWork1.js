@@ -21,9 +21,11 @@ function range(start, end) {
     return array;
 }
 
-function sum(...array) {
+function sum(array) { //Почему-то не считает правильно
     let sum = 0;
-    array.reduce((sum, element) => sum += parseInt(element));
+    array.forEach(element => {
+        sum += parseInt(element)
+    });
     return sum;
 }
 
