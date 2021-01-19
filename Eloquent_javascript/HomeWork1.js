@@ -5,36 +5,38 @@
 // возвращающую их сумму.
 
 function range(start, end) {
-    let array = [];
+    let arr = [];
     if (isNaN(start) || isNaN(end)) {
         return false;
     } 
     if  (start <= end) {
         for (let i = start; i <= end; i++) {
-            array.push(i);
+            arr.push(i);
             } 
         } else {
         for (let i = end; i <= start; i++) {
-            array.push(i);
+            arr.push(i);
             }
     }
-    return array;
+    return arr;
 }
 
-function sum(array) { //Почему-то не считает правильно
-    let sum = 0;
-    array.forEach(element => {
-        sum += parseInt(element)
-    });
-    return sum;
+function sum(arr) { 
+    if (Array.isArray(arr)) {
+        arr.forEach(element => {
+            s = parseInt(s) + parseInt(element);
+            // console.log(s);
+        });
+    };
+    return s;
 }
 
 
-// console.log(range(-2, 2));
-// console.log(range(5, 1));
-// console.log(range(10,'qwerty'));
-// console.log(range(undefined,10));
-console.log(sum(range(-2, 2)));
+console.log(range(-2, 3));
+console.log(range(5, 1));
+console.log(range(10,'qwerty'));
+console.log(range(undefined,10));
+console.log(sum(range(-2, 3)));
 console.log(sum(range(5, 1)));
 console.log(sum(undefined));
 console.log(sum());
