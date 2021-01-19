@@ -21,11 +21,11 @@ function range(start, end) {
     return arr;
 }
 
-function sum(arr) { 
+function sum(arr) {
+    let s = 0;
     if (Array.isArray(arr)) {
         arr.forEach(element => {
             s = parseInt(s) + parseInt(element);
-            // console.log(s);
         });
     };
     return s;
