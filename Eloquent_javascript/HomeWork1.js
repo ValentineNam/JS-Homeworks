@@ -168,8 +168,17 @@ function listToArray(list) {
     return arr;
 }
 
+function prepend(newElem, list) {
+    let newList = {value: undefined, rest: undefined};
+    newList.value = newElem;
+    newList.rest = list;
+    return newList;    
+}
+
 console.log(arrayToList([0, 1, 2]));
 console.log(arrayToList(`0, 1, 2`));
 
 let myList = {value: 1, rest: {value: 2, rest: {value: 3, rest: {value: `end`, rest: null}}}};
 console.log(listToArray(myList));
+
+console.log(prepend(0, myList));
