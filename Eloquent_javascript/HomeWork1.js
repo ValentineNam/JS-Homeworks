@@ -159,5 +159,17 @@ function arrayToList(arr) {
     }
 }
 
+function listToArray(list) {
+    let arr = [];
+    for (; list; ) {
+        arr.push(list.value);
+        list = list.rest;
+    }
+    return arr;
+}
+
 console.log(arrayToList([0, 1, 2]));
 console.log(arrayToList(`0, 1, 2`));
+
+let myList = {value: 1, rest: {value: 2, rest: {value: 3, rest: {value: `end`, rest: null}}}};
+console.log(listToArray(myList));
