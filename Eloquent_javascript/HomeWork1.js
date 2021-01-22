@@ -27,6 +27,8 @@ function sum(arr) {
         arr.forEach(element => {
             s = parseInt(s) + parseInt(element);
         });
+    } else {
+        return `Массив НЕ передан!`;
     }
     return s;
 }
@@ -82,7 +84,7 @@ function modifiedRange(start, end, step) {
 
 console.log(modifiedRange(-5, 1));
 console.log(modifiedRange(2, -3, 0));
-console.log(modifiedRange(4, 6, 1));
+console.log(modifiedRange(1, 10, 2));
 console.log(modifiedRange(5, 2, -1));
 console.log(modifiedRange(1, 5, -1));
 console.log(modifiedRange(5, 1, 1));
