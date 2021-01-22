@@ -90,3 +90,49 @@ console.log(modifiedRange(1, 5, -1));
 console.log(modifiedRange(5, 1, 1));
 console.log(modifiedRange(undefined, 2, -1));
 console.log(modifiedRange(4, 'text', 1));
+
+// ToDo: Массив в обратном порядке
+// У массивов есть метод reverse, который изменяет порядок следования элементов в массиве. 
+// Для выполнения этого упражнения напишите две функции: reverseArray и reverseArrayInPlace. 
+// Первая функция, reverseArray, принимает массив в качестве аргумента и создает новый массив, 
+// содержащий те же элементы в обратном порядке. Вторая, reverseArrayInPlace, делает то же, 
+// что и метод reverse: преобразовывает массив, заданный в качестве аргумента, меняя порядок 
+// следования его элементов на обратный. Не используйте для этого стандартный метод reverse.
+// Вспомните, что мы говорили о побочных эффектах и чистых функциях в предыдущей главе, и 
+// ответьте на вопрос: какой из этих вариантов, по вашему мнению, будет полезен в большинстве случаев? 
+// Какой из них быстрее работает?
+
+function reverseArray(arr) {
+    if (Array.isArray(arr)) {
+        let newArr = [];
+        arr.forEach((element) => {
+            newArr.unshift(element);
+        });
+        return newArr;
+    } else {
+        return `Массив НЕ передан`;
+    }
+}
+
+function reverseArrayInPlace(arr) {
+    if (Array.isArray(arr)) {
+        for (let i = 0; i < arr.length; i++) {
+            let temp = arr.splice(i, 1);    
+            arr.unshift(temp[0]); //temp[0] просто метод slice разрезает массив на части (массивы, а не вырезает конкретный элемент)
+        }
+        return arr;
+    } else {
+        return `Массив НЕ передан`;
+    }
+}
+
+console.log(reverseArray(['zero', 1, 2, 3, 4]));
+console.log(reverseArray(NaN));
+console.log(reverseArray(undefined));
+console.log(reverseArrayInPlace(['zero', 1, 2, 3, 4]));
+console.log(reverseArrayInPlace(NaN));
+console.log(reverseArrayInPlace(undefined));
+
+
+// Напишите функцию arrayToList, которая строит список, чья структура подобна показанной, если передать функции массив [1, 2, 3] в качестве аргумента. Напишите также функцию listToArray, создающую массив из списка. Затем добавьте вспомогательную функцию prepend, принимающую элемент и список и создающую новый список, в котором заданный элемент добавлен в начало исходного списка. Кроме того, создайте функцию nth, принимающую список и число и возвращающую элемент, находящийся в заданной позиции в этом списке (где ноль соответствует первому элементу), или undefined, если элемента в заданной позиции не существует.
+// Если вам этого все еще недостаточно, напишите рекурсивную версию функции nth.
