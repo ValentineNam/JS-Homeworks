@@ -6,18 +6,21 @@
 
 function range(start, end) {
     let arr = [];
+    let step = 1;
     if (isNaN(start) || isNaN(end)) {
         return false;
     }
-    if  (start <= end) {
-        for (let i = start; i <= end; i++) {
+    (start > end) ? step = -1: false;
+    if (start <= end) {
+        for (let i = start; i <= end; i += step) {
             arr.push(i);
-            } 
-        } else {
-        for (let i = end; i <= start; i++) {
+        }
+    } else {
+        for (let i = start; i >= end; i += step) {
             arr.push(i);
-            }
+        }
     }
+    
     return arr;
 }
 
@@ -175,6 +178,19 @@ function prepend(newElem, list) {
     return newList;    
 }
 
+//ToDo: Work in progress
+function nth(list, position) {
+    let result;
+    let elem;
+    if (position > 0) {
+        position -= 1;
+        return elem = list.rest;
+    } else {
+        result = list.value;
+    }
+    return result;
+}
+
 console.log(arrayToList([0, 1, 2]));
 console.log(arrayToList(`0, 1, 2`));
 
@@ -182,3 +198,5 @@ let myList = {value: 1, rest: {value: 2, rest: {value: 3, rest: {value: `end`, r
 console.log(listToArray(myList));
 
 console.log(prepend(0, myList));
+
+console.log(`nth ${nth(myList, 3)}`);
