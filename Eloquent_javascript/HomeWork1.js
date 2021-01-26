@@ -121,7 +121,7 @@ function reverseArrayInPlace(arr) {
     if (Array.isArray(arr)) {
         for (let i = 0; i < arr.length; i++) {
             let temp = arr.splice(i, 1);    
-            arr.unshift(temp[0]); //temp[0] просто метод slice разрезает массив на части (массивы, а не вырезает конкретный элемент)
+            arr.unshift(temp[0]); //temp[0] просто метод slice разрезает массив на части (получаем массивы), а не вырезает конкретный элемент
         }
         return arr;
     } else {
@@ -178,17 +178,16 @@ function prepend(newElem, list) {
     return newList;    
 }
 
-//ToDo: Work in progress
+
 function nth(list, position) {
-    let result;
-    let elem;
-    if (position > 0) {
-        position -= 1;
-        return elem = list.rest;
+    if ((!list) || isNaN(position)) {
+        return false;
+    } 
+    if (position == 0) {
+        return list.value;
     } else {
-        result = list.value;
+        return nth(list.rest, position - 1);
     }
-    return result;
 }
 
 console.log(arrayToList([0, 1, 2]));
@@ -199,4 +198,7 @@ console.log(listToArray(myList));
 
 console.log(prepend(0, myList));
 
-console.log(`nth ${nth(myList, 3)}`);
+console.log(nth(myList, 3));
+console.log(nth(myList, 0));
+console.log(nth(myList, -1));
+console.log(nth(myList, 'text'));
