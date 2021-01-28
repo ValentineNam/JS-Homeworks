@@ -181,7 +181,7 @@ function prepend(newElem, list) {
 
 function nth(list, position) {
     if ((!list) || isNaN(position)) {
-        return false;
+        return undefined;
     } 
     if (position == 0) {
         return list.value;
