@@ -21,10 +21,7 @@ function Bot(coordX, coordY) {
         this.flagSleeping = 0;
         this.flagHungry = 0;
         this.flagAlive = 1;
-        this.genom = [];//[0,1,2,3,4,5]
-		// this.genom = [  4, 5, 2, 4, 1, 4,
-		// 	4, 3, 2, 5, 4, 4,
-		// 	3, 5, 2, 4];//[0,1,2,3,4,5]
+        this.genom = [];
 }
 
 function Space() {
@@ -97,44 +94,22 @@ worldMatrix[2][2] = new Bot(2, 2);
 
 worldMatrix[2][2]['genom'] = randomGenomGenerator();
 
-// worldMatrix[2][5] = new Bot(2, 5);
-
-// worldMatrix[2][5]['genom'] = randomGenomGenerator();
-
 worldMatrix[2][3] = new Tree(2, 3);
 
 worldMatrix[3][3] = new Mineral(3, 3);
-
-// console.log(`Объект в клетке 2-2: ${worldMatrix[2][2]['objType']} ${worldMatrix[2][2]['posX']}:${worldMatrix[2][2]['posY']} до перемещения`);
-
-// worldMatrix[3][2] = new Space();
-botMove(2, 2, 4, 1);
-
-// console.log(`Объект в клетке 2-2: ${worldMatrix[2][2]['objType']} после перемещения`);
-
-// console.log(`Объект в клетке 1-1: ${worldMatrix[1][1]['objType']} ${worldMatrix[1][1]['posX']}:${worldMatrix[1][1]['posY']}`);
-
-// console.log(`Объект в клетке 4-1: ${worldMatrix[4][1].objType}`);
-// console.log(`${worldMatrix[4][1].genom}`);
-
-// main(worldMatrix);
 
 function main(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
             if (elem.objType == 'bot') {
-                // console.log(`x: ${elem.posX}, y: ${elem.posY}`);
-                // console.log(`${elem.genom}`);
                 GenomVM(elem, worldObj);
             } else if (elem.objType == 'tree') {
-                // console.log(`x: ${elem.posX}, y: ${elem.posY}`);
-                // console.log(`This tree has age is ${elem.age[0]}`);
+
             } else if (elem.objType == 'mineral') {
-                // console.log(`x: ${elem.posX}, y: ${elem.posY}`);
-                // console.log(`This is a mineral with strength ${elem.minerals[0]}`);
+
             } else if (elem.objType == 'space') {
-                // console.log(`x: ${j}, y: ${i} is empty`);
+
             }
 		}
 	}
@@ -153,16 +128,11 @@ function GenomVM(botObject, worldObj) {
 	let botGenom = botObject.genom;
 
 	while ((breakFlag != 1) && (actCounter > 0)) {
-		console.log(`Action counter: ${actCounter}`);
-		console.log(`BreakFlag : ${breakFlag}`);
 		switch (botGenom[adr]) {
 			case 0: // Mutate random gen
-				// console.log(`case 0`);
 				adr = incAdr(adr);
 				genomMutate(botGenom);
 				actCounter--;
-				// console.log("Mutate and Go To: " + adr);
-				console.log(botGenom);
 				break;
 			case 1: // Move front
 			// Понять, что за координаты спереди (по линии взгляда)
@@ -171,79 +141,49 @@ function GenomVM(botObject, worldObj) {
 			// Если спереди не пустое пространство и не стена, то переходим к команде в адресе +3
 			// Если спереди пустое пространство, то шагаем на клетку вперед переходим к команде +4
 				let frontCoordinates = getFrontCellCoordinates(direction, posX, posY);
-				// console.log(`case 1`);
-				// console.log(`front coords: ${frontCoordinates}`);
 				let frontObjectType;
 				let frontX;
 				let frontY;
 				if (frontCoordinates != -1) {
 					frontX = frontCoordinates[0];
 					frontY = frontCoordinates[1];
-					frontObjectType = worldObj[frontX][frontY].objType;
-					// console.log(`if working`);
-				console.log(`front object at coords [${frontX},${frontY}] is ${worldObj[frontX][frontY].objType}`);				
-				}
-				console.log(`direction is ${direction}`);
+					frontObjectType = worldObj[frontX][frontY].objType;			
+				};
                 if (direction == 0) {
                     adr = incAdr(adr);
-					console.log(`case 1 go if 1`);
                 } else {
 					if (frontObjectType == 'wall') {
 						adr = jumpAdr(adr, 2);
-						console.log(`case 1 go if 2`);
 					} else if ((frontObjectType == 'bot') || (frontObjectType == 'tree') || (frontObjectType == 'mineral')) {
 						adr = jumpAdr(adr, 3);
-						console.log(`case 1 go if 3`);
 					} else if (frontObjectType == 'space') {
-						console.log(`bot see in direction ${direction}`);
-						console.log(`bot move to the front coords ${frontX},${frontY}`);
 						botMove(posX, posY, frontX, frontY);
 						adr = jumpAdr(adr, 4);
-						console.log(`case 1 go if 4`);
 						breakFlag = 1; // Перемещение это прерывающая активность операция //! ToDo: не понятно, почему не меняет флаг
-						console.log(`break from case 1 4 is: ${breakFlag}`);
 					};
 				};
-				console.log(botGenom);
 				actCounter--;
-				console.log("1 Go To adr: " + adr);
 				break;
 			case 2: // Bot change direction right
-				console.log(`case 2`);
 				adr = incAdr(adr);
 				direction = botObject.direction = botChangeDirection(direction, 'rigth');
-				console.log(`new direction is ${botObject.direction}`);
-				// console.log(`world object direction is ${worldObj[posX][posY].direction}`);
-				// console.log(`direction is ${direction}`);
 				actCounter--;
-				console.log("2 Go To adr: " + adr);
 				break;
 			case 3: // Bot change direction left
-				console.log(`case 3`);
 				adr = incAdr(adr);
 				direction = botObject.direction = botChangeDirection(direction, 'left');
-				console.log(`new direction is ${botObject.direction}`);
-				// console.log(`world object direction is ${worldObj[posX][posY].direction}`);
-				// console.log(`direction is ${direction}`);
 				actCounter--;
-				console.log("3 Go To adr: " + adr);
 				break;
 			case 4:
-				console.log(`case 4`);
 				adr = jumpAdr(adr, 4);
 				actCounter--;
-				console.log("4 Go To adr: " + adr);
 				break;
 			case 5:
-				console.log(`case 5`);
 				adr = jumpAdr(adr, 5);
 				actCounter--;
-				console.log("5 Go To adr: " + adr);
 				break;
 			default:
-				console.log(`default`);
 				adr = 0;
-				// console.log("Bad jump. Go To adr: " + adr);
 				breakFlag = 1;
 				break;
 		}
@@ -285,6 +225,20 @@ function genomMutate(botGenom) {
 	while (oldGen == botGenom[pos]) {
 		botGenom[pos] = getRandomInt(0, 5);
 	}
+	return botGenom;
+}
+
+// TODO: Прикрепить функцию рекомбинации генов к какому-то гену
+function genomRecombinate(botGenom) {
+	let pos1 = getRandomInt(0, botGenom.length - 1);
+	let pos2, temp;
+	pos2 = getRandomInt(0, botGenom.length - 1);
+	while (pos2 == pos1) {
+		pos2 = getRandomInt(0, botGenom.length - 1);
+	}
+	temp = botGenom[pos1] ;
+	botGenom[pos1] = botGenom[pos2];
+	botGenom[pos2] = temp;
 	return botGenom;
 }
 
@@ -409,13 +363,6 @@ function botCheckDirection(botGenom, worldArray, coordX, coordY) { //получ�
 		case 'bot':
 			let frontBotGenom = worldArray[coordX][coordY].genom;
 			isRelative(botGenom, frontBotGenom) == 1 ? x = 1 : x = 2;
-			// console.log(`is relative ${isRelative(botGenom, frontBotGenom)}`);
-		// case 'relative':
-		// 	x = 1;
-		// 	break;
-		// case 'stranger':
-		// 	x = 2;
-		// 	break;
 		case 'tree':
 			x = 3;
 			break;
