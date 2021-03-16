@@ -110,7 +110,7 @@ function main(worldObj) {
 
             } else if (elem.objType == 'space') {
 
-            }
+			}
 		}
 	}
 }
@@ -344,6 +344,7 @@ function botChangeDirection(direction, spin) {
 				}
 				break;
 			default:
+				direction = 0;
 				break;
 		}
 	}
