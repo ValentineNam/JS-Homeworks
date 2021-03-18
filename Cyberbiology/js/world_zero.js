@@ -122,7 +122,7 @@ function vmsFunc(worldObj) {
 
             } else if (elem.objType == 'space') {
 
-            }
+			}
 		}
 	}
 }
@@ -133,7 +133,7 @@ function clearMoveParams(worldObj) {
 			let elem = worldObj[j][i];
             if (elem.objType == 'bot') {
                 elem.flagMoved = 0;
-            }
+			}
 		}
 	}
 }
