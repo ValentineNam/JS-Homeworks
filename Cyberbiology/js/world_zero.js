@@ -1,10 +1,10 @@
 'use strict'
 
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGTH = 600;
-const GENOM_LENGTH = 16;
-const WORLD_X = 7;
-const WORLD_Y = 7;
+const CANVAS_WIDTH = 800,
+	CANVAS_HEIGTH = 600,
+	GENOM_LENGTH = 16,
+	WORLD_X = 7,
+	WORLD_Y = 7;
 
 let worldTime = 0;
 
@@ -20,6 +20,7 @@ function Bot(coordX, coordY) {
         this.flagAttacked = 0;
         this.flagSleeping = 0;
         this.flagHungry = 0;
+		this.flagMoved = 0;
         this.flagAlive = 1;
         this.genom = [];
 }
@@ -94,40 +95,62 @@ worldMatrix[2][2] = new Bot(2, 2);
 
 worldMatrix[2][2]['genom'] = randomGenomGenerator();
 
+worldMatrix[4][4] = new Bot(4, 4);
+
+worldMatrix[4][4]['genom'] = randomGenomGenerator();
+
 worldMatrix[2][3] = new Tree(2, 3);
 
 worldMatrix[3][3] = new Mineral(3, 3);
 
 function main(worldObj) {
+	clearMoveParams(worldObj);
+	vmsFunc(worldObj);
+}
+
+function vmsFunc(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
             if (elem.objType == 'bot') {
-                GenomVM(elem, worldObj);
+                if (elem.flagMoved == 0) { 
+					genomVM(elem, worldObj);
+				}
             } else if (elem.objType == 'tree') {
-
+				treeVM(elem, worldObj);
             } else if (elem.objType == 'mineral') {
 
             } else if (elem.objType == 'space') {
 
-			}
+            }
 		}
 	}
 }
 
-function GenomVM(botObject, worldObj) {
-	let breakFlag = 0;
-	let actCounter = 16;
-	let adr = 0;
+function clearMoveParams(worldObj) {
+	for(let j = 0; j < worldObj.length; j++) {
+		for(let i = 0; i < worldObj[j].length; i++) {
+			let elem = worldObj[j][i];
+            if (elem.objType == 'bot') {
+                elem.flagMoved = 0;
+            }
+		}
+	}
+}
 
-	let energy = botObject.energy;
-	let direction = botObject.direction; // * направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
-	let posX = botObject.posX;
-	let posY = botObject.posY;
+function genomVM(botObject, worldObj) {
+	let breakFlag = 0,
+	actCounter = 16,
+	adr = 0;
 
-	let botGenom = botObject.genom;
+	let energy = botObject.energy,
+	direction = botObject.direction, // * направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
+	posX = botObject.posX,
+	posY = botObject.posY,
+	botGenom = botObject.genom,
+	botMoved = botObject.flagMoved;
 
-	while ((breakFlag != 1) && (actCounter > 0)) {
+	for (;((breakFlag == 0) && (actCounter >= 0) && (botMoved != 1));) {
 		switch (botGenom[adr]) {
 			case 0: // Mutate random gen
 				adr = incAdr(adr);
@@ -148,7 +171,7 @@ function GenomVM(botObject, worldObj) {
 					frontX = frontCoordinates[0];
 					frontY = frontCoordinates[1];
 					frontObjectType = worldObj[frontX][frontY].objType;			
-				};
+				}
                 if (direction == 0) {
                     adr = incAdr(adr);
                 } else {
@@ -159,7 +182,8 @@ function GenomVM(botObject, worldObj) {
 					} else if (frontObjectType == 'space') {
 						botMove(posX, posY, frontX, frontY);
 						adr = jumpAdr(adr, 4);
-						breakFlag = 1; // Перемещение это прерывающая активность операция //! ToDo: не понятно, почему не меняет флаг
+						breakFlag = 1; // Перемещение это прерывающая активность операция 
+						botObject.flagMoved = 1;
 					};
 				};
 				actCounter--;
@@ -228,7 +252,6 @@ function genomMutate(botGenom) {
 	return botGenom;
 }
 
-// TODO: Прикрепить функцию рекомбинации генов к какому-то гену
 function genomRecombinate(botGenom) {
 	let pos1 = getRandomInt(0, botGenom.length - 1);
 	let pos2, temp;
@@ -344,7 +367,6 @@ function botChangeDirection(direction, spin) {
 				}
 				break;
 			default:
-				direction = 0;
 				break;
 		}
 	}
@@ -415,37 +437,37 @@ function buildTheWorldWall(arr) {
 
 // TODO: Tree VM
 function treeVM(params) {
-	return
+	return false;
 }
 
 // TODO: Minerals VM
 function mineralsVM(params) {
-	return
+	return false;
 }
 
 // TODO: Create new bot
 function createBot(params) {
-	return
+	return false;
 }
 
 // TODO: Create new child
 function createChild(params) {
-	return
+	return false;
 }
 
 // TODO: Check flags
 function checkFlags(params) {
-	return
+	return false;
 }
 
 // TODO: Set hungry flag to
 function setHungryFlag(params) {
-	return
+	return false;
 }
 
 // TODO: Change direction
 function changeDirection(params) {
-	return
+	return false;
 }
 
 // TODO: Check genom diffs
@@ -471,8 +493,8 @@ function isRelative(a, b) { //передаем геномы ботов
 }
 
 let timerId = setTimeout(function tick() {
-	// console.clear();
-	console.log(`*******`);
+	console.clear();
+	// console.log(`*******`);
 	console.log(`step ${worldTime}`);
 	main(worldMatrix);
 	render(worldMatrix);
@@ -481,4 +503,4 @@ let timerId = setTimeout(function tick() {
 	if (worldTime >= 20) {
 		clearTimeout(timerId);
 	}
-}, 500);
+}, 500); 
