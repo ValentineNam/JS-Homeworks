@@ -69,6 +69,7 @@ function emptySpaceGenerator(worldObj) {
 	}
 }
 
+// * возвращает геном (массив длиной 16 из случайных чисел от 0 до 5)
 function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = 5) {
 	let GENOM = [];
 	for (let x = genomLength; x > 0; x--) {
@@ -77,12 +78,22 @@ function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = 
 	return GENOM;
 }
 
+// * возвращает случайное число в диапазоне [min, max]
 function getRandomInt(min, max) {
 	if (min < max) {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
 	} else {
 		return Math.floor(Math.random() * (min - max + 1)) + max;
 	}
+}
+
+// * возвращает целый показатель степени 2 для получения числа x
+function powerOfTwo(x) {
+	let pow = 1;
+	for (;2 <= x / 2; pow++) {
+		x /= 2;
+	}
+	return pow;
 }
 
 let worldMatrix = create2DArray(WORLD_X, WORLD_Y);
@@ -462,11 +473,6 @@ function checkFlags(params) {
 
 // TODO: Set hungry flag to
 function setHungryFlag(params) {
-	return false;
-}
-
-// TODO: Change direction
-function changeDirection(params) {
 	return false;
 }
 
