@@ -46,7 +46,7 @@ function Tree(coordX, coordY) {
 }
 
 function Meat(coordX, coordY) {
-	this.objType = 'mineral';
+	this.objType = 'meat';
 	this.age = [0,128];
 	this.posX = coordX;
 	this.posY = coordY;
@@ -319,7 +319,7 @@ function botMove(coordX, coordY, newX, newY) {
     }
 }
 
-// Вычисление координат клетки в направлении взгляда бота
+// * Вычисление координат клетки в направлении взгляда бота
 // Прости меня будущий я, но как это сделать иначе мне не понятно 18.11.20
 function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 	let coordsXY = -1;
@@ -416,8 +416,8 @@ function botChangeDirection(direction, spin) {
 }
 
 // TODO: функция проверки объекта в указанных координатах
-function botCheckDirection(botGenom, worldArray, coordX, coordY) { //получаем координаты, возвращаем ответ 
-	// если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
+function botCheckDirection(botGenom, worldArray, coordX, coordY) { // * получаем координаты, возвращаем ответ 
+	// * если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
 	// TODO: дописать передачу координат и определение типа объекта
 	let objType = worldArray[coordX][coordY].objType;
 	let x;
@@ -515,7 +515,7 @@ function setHungryFlag(params) {
 	return false;
 }
 
-// Сменить флаг бота с жив на мертв
+// * Сменить флаг бота с жив на мертв
 function revertAliveFlag(botObject) {
 	botObject.flagAlive = 0;
 	return false;
@@ -551,7 +551,7 @@ function mineralToEnergy(params) {
 	return false;
 }
 
-// Set speed of bot
+// * Set speed of bot
 function setSpeed(botObject) {
 	let e = botObject.energy[0],
 	eMax = botObject.energy[1],
