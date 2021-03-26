@@ -9,48 +9,64 @@ const CANVAS_WIDTH = 800,
 let worldTime = 0;
 
 function Bot(coordX, coordY) {
-        this.objType = 'bot';
-        this.energy = [100,1024];
-        this.age = [0,1024];
-        this.minerals = [128,256];
-        this.posX = coordX;
-        this.posY = coordY;
-        this.direction = 5;
-        this.speed = 100;
-        this.flagAttacked = 0;
-        this.flagSleeping = 0;
-        this.flagHungry = 0;
+		this.objType = 'bot';
+		this.age = [0,1024];
+		this.posX = coordX;
+		this.posY = coordY;
+		this.direction = 5;
+		this.flagAttacked = 0;
+		this.flagSleeping = 0;
+		this.flagHungry = 0;
 		this.flagMoved = 0;
-        this.flagAlive = 1;
-        this.genom = [];
+		this.flagAlive = 1;
+		this.energy = [1024,1024];
+		this.minerals = [8,256];
+		this.speed = 100;
+		this.genom = [];
 }
 
 function Space() {
 	this.objType = 'space';
+	this.energy = [200,8192];
+	// TODO: добавить рассеивание энергии в пространстве, поглошение ее деревьями
+	// TODO: и превращение минералов в энергию после "смерти". Также, добавить
+	// TODO: прямое получение энергии пространства из клетки пустого пространства
+	// TODO: при переходе ботом в нее. Бот "сгорает", если энергия в клетке слишком большая.
+	// TODO: Добавить ген проверки температуры в клетке по направлению взгляда.
 }
 
 function Tree(coordX, coordY) {
-    this.objType = 'tree';
-    this.energy = [200,2048];
-    this.age = [0,2048];
-    this.minerals = [200,2048];
-    this.posX = coordX;
+	this.objType = 'tree';
+	this.age = [0,2048];
+	this.posX = coordX;
 	this.posY = coordY;
+	this.energy = [200,2048];
+	this.minerals = [200,2048];
+	this.flagAlive = 1;  
+}
+
+function Meat(coordX, coordY) {
+	this.objType = 'mineral';
+	this.age = [0,128];
+	this.posX = coordX;
+	this.posY = coordY;
+	this.energy = [20,256];
+	this.minerals = [2048,2048];
 	this.flagAlive = 1;  
 }
 
 function Mineral(coordX, coordY) {
-    this.objType = 'mineral';
-    this.energy = [20,256];
-    this.age = [0,4096];
-    this.minerals = [2048,2048];
-    this.posX = coordX;
+	this.objType = 'mineral';
+	this.age = [0,4096];
+	this.posX = coordX;
 	this.posY = coordY;
+	this.energy = [20,256];
+	this.minerals = [2048,4096];
 	this.flagAlive = 1;  
 }
 
 function Wall(coordX, coordY) {
-    this.objType = 'wall';
+	this.objType = 'wall';
 }
 
 function create2DArray(rows = 5, columns = 5) {
@@ -87,7 +103,7 @@ function getRandomInt(min, max) {
 	}
 }
 
-// * возвращает целый показатель степени 2 для получения числа x
+// * возвращает целый показатель степени, в которую нужно возвести 2 для получения числа x
 function powerOfTwo(x) {
 	let pow = 1;
 	for (;2 <= x / 2; pow++) {
@@ -154,14 +170,16 @@ function genomVM(botObject, worldObj) {
 	actCounter = 16,
 	adr = 0;
 
-	let energy = botObject.energy,
+	let energy = botObject.energy[0],
 	direction = botObject.direction, // * направление взгляда бота 1 сев, 2 сев-вос, 3 восток ... 8 сев-зап, 0 - никуда
 	posX = botObject.posX,
 	posY = botObject.posY,
 	botGenom = botObject.genom,
-	botMoved = botObject.flagMoved;
+	botMoved = botObject.flagMoved,
+	botSpeed;
 
 	for (;((breakFlag == 0) && (actCounter >= 0) && (botMoved != 1));) {
+		botSpeed = setSpeed(botObject);
 		switch (botGenom[adr]) {
 			case 0: // Mutate random gen
 				adr = incAdr(adr);
@@ -183,30 +201,39 @@ function genomVM(botObject, worldObj) {
 					frontY = frontCoordinates[1];
 					frontObjectType = worldObj[frontX][frontY].objType;			
 				}
-                if (direction == 0) {
-                    adr = incAdr(adr);
-                } else {
-					if (frontObjectType == 'wall') {
-						adr = jumpAdr(adr, 2);
-					} else if ((frontObjectType == 'bot') || (frontObjectType == 'tree') || (frontObjectType == 'mineral')) {
-						adr = jumpAdr(adr, 3);
-					} else if (frontObjectType == 'space') {
-						botMove(posX, posY, frontX, frontY);
-						adr = jumpAdr(adr, 4);
-						breakFlag = 1; // Перемещение это прерывающая активность операция 
-						botObject.flagMoved = 1;
+				if  (energy > botSpeed) {
+					if (direction == 0) {
+						adr = incAdr(adr);
+						energy = decEnergy(energy, 1); //спим - тратим 1 ед энергии
+					} else {
+						if (frontObjectType == 'wall') {
+							adr = jumpAdr(adr, 2);
+							energy = decEnergy(energy, 1);
+						} else if ((frontObjectType == 'bot') || (frontObjectType == 'tree') || (frontObjectType == 'mineral')) {
+							adr = jumpAdr(adr, 3);
+							energy = decEnergy(energy, 1);
+						} else if (frontObjectType == 'space') {
+							botMove(posX, posY, frontX, frontY);
+							adr = jumpAdr(adr, 4);
+							breakFlag = 1; // Перемещение это прерывающая активность операция 
+							botObject.flagMoved = 1;
+							energy = decEnergy(energy, botSpeed); //при перемещении уменьшаем энергию на величину botSpeed
+						};
 					};
-				};
+				} else {
+					break;
+				}
 				actCounter--;
 				break;
 			case 2: // Bot change direction right
 				adr = incAdr(adr);
 				direction = botObject.direction = botChangeDirection(direction, 'rigth');
-				actCounter--;
+				energy = decEnergy(energy, Math.ceil(botSpeed/8));
 				break;
 			case 3: // Bot change direction left
 				adr = incAdr(adr);
 				direction = botObject.direction = botChangeDirection(direction, 'left');
+				energy = decEnergy(energy, Math.ceil(botSpeed/8));
 				actCounter--;
 				break;
 			case 4:
@@ -221,6 +248,10 @@ function genomVM(botObject, worldObj) {
 				adr = 0;
 				breakFlag = 1;
 				break;
+		}
+		botObject.energy[0] = energy;
+		if (botObject.energy[0] == 0) {
+			revertAliveFlag(botObject);
 		}
 	}
 }
@@ -447,12 +478,20 @@ function buildTheWorldWall(arr) {
 }
 
 // TODO: Tree VM
+//дерево  приращивает каждый ход энергию и минералы, по достижению определенного возраста умирает
+//и оставляет всю накопленную энергию в минерале, которая "остывая" превращается в минеральную составляющую
+//дерева energy -> minerals
 function treeVM(params) {
 	return false;
 }
 
 // TODO: Minerals VM
 function mineralsVM(params) {
+	return false;
+}
+
+// TODO: Meat VM
+function meatVM(params) {
 	return false;
 }
 
@@ -474,6 +513,53 @@ function checkFlags(params) {
 // TODO: Set hungry flag to
 function setHungryFlag(params) {
 	return false;
+}
+
+// Сменить флаг бота с жив на мертв
+function revertAliveFlag(botObject) {
+	botObject.flagAlive = 0;
+	return false;
+}
+
+// TODO: Give resources in some direction
+function giveResources(params) {
+	return false;
+}
+
+// TODO: Attack another bot in some direction
+function botAttack(params) {
+	return false;
+}
+
+// TODO: Bot to meat
+function botToMeat(params) {
+	return false;
+}
+
+// TODO: Meat to mineral
+function meatToMineral(params) {
+	return false;
+}
+
+// TODO: Tree to mineral
+function treeToMineral(params) {
+	return false;
+}
+
+// TODO: Mineral to energy
+function mineralToEnergy(params) {
+	return false;
+}
+
+// Set speed of bot
+function setSpeed(botObject) {
+	let e = botObject.energy[0],
+	eMax = botObject.energy[1],
+	m = botObject.minerals[0],
+	mMax = botObject.minerals[1],
+	speed;
+	speed = Math.ceil((95 + powerOfTwo(m) * powerOfTwo(mMax)) / (5 + powerOfTwo(e))) + Math.round(powerOfTwo(m) / powerOfTwo(e)) + Math.floor(powerOfTwo(mMax) / powerOfTwo(eMax));
+	return speed;
 }
 
 // TODO: Check genom diffs
