@@ -696,7 +696,7 @@ function isRelative(a, b) { //передаем геномы ботов
 }
 
 let timerId = setTimeout(function tick() {
-	// console.clear();
+	console.clear();
 	console.log(`*******`);
 	console.log(`step ${worldTime}`);
 	main(worldMatrix);
