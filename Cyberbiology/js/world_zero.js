@@ -562,11 +562,11 @@ function botEatTree(botObject, coordX, coordY) {
 		botEnergy = botObject.energy[0],
 		botMinerals = botObject.minerals[0],
 		botEnergyDiff = botObject.energy[1] - botObject.energy[0],
-		botMineralsDiff = botObject.energy[1] - botObject.energy[0],
+		botMineralsDiff = botObject.minerals[1] - botObject.minerals[0],
 		botPosX = botObject.posX,
 		botPosY = botObject.posY,
 		multiplier = 1,
-		oneBiteValue = 100,
+		oneBiteValue = 80,
 		temp;
 
 		if (botHungry == 1) {
