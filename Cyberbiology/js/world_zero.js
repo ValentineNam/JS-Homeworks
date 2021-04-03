@@ -262,6 +262,15 @@ function genomVM(botObject, worldObj) {
 				adr = incAdr(adr);
 				actCounter--;
 				break;
+			case 6:
+				if (frontObjectType == 'mineral') {
+					botEatMineral(botObject, frontX, frontY);
+					energy = decEnergy(energy, 1);
+					breakFlag = 1;
+				}
+				adr = incAdr(adr);
+				actCounter--;
+				break;
 			default:
 				adr = 0;
 				breakFlag = 1;
@@ -645,6 +654,32 @@ function botEatMineral(botObject, coordX, coordY) {
 		worldMatrix[coordX][coordY].minerals[0] = minerals;
 		worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
 	}
+}
+
+// * Бот проверяет свой уровень энергии
+function botCheckOwnEnergy(botObject) {
+	let energy = botObject.energy[0],
+	maxEnergy = botObject.energy[1],
+	energyLvl = Math.floor(energy / maxEnergy * 10);
+	return energyLvl; // возвращаем уровень от 0 - 10
+}
+
+// TODO: Bot to meat
+function botToMeat(botObject) {
+	let x = botObject.posX,
+	y = botObject.posY,
+	energy = botObject.energy[0],
+	minerals = botObject.minerals[0],
+	meat = new Meat();
+
+	meat.energy[0] = energy;
+	meat.minerals[0] = minerals;
+	worldMatrix[x][y] = meat;
+}
+
+// TODO: Meat to mineral
+function meatToMineral(params) {
+	return false;
 }
 
 // TODO: Tree to mineral
