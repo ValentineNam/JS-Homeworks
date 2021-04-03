@@ -567,7 +567,7 @@ function botEatTree(botObject, coordX, coordY) {
 		botPosY = botObject.posY,
 		multiplier = 1,
 		oneBiteValue = 80,
-		temp;
+		temp = 0;
 
 		if (botHungry == 1) {
 			multiplier = 2.5;
@@ -577,27 +577,26 @@ function botEatTree(botObject, coordX, coordY) {
 			temp = botEnergyDiff;
 		} else if ((treeEnergy <= multiplier * oneBiteValue) && (botEnergyDiff > treeEnergy)) {
 			temp = treeEnergy;
-		} else if ((treeEnergy > multiplier * oneBiteValue) && (botEnergyDiff <= treeEnergy)) {
+		} else if ((treeEnergy > multiplier * oneBiteValue) && (botEnergyDiff <= multiplier * oneBiteValue)) {
 			temp = botEnergyDiff; 
-		} else if ((treeEnergy > multiplier * oneBiteValue) && (botEnergyDiff > treeEnergy)) {
-			temp = oneBiteValue;
+		} else if ((treeEnergy > multiplier * oneBiteValue) && (botEnergyDiff > multiplier * oneBiteValue)) {
+			temp = multiplier * oneBiteValue;
 		}
 
 		botEnergy += multiplier * temp;
 		treeEnergy -= multiplier * temp;
 
-		if ((treeMinerals <= multiplier * oneBiteValue) && (botMineralsDiff <= treeMinerals)) {
+		if ((treeMinerals <= multiplier * oneBiteValue / 4) && (botMineralsDiff <= treeMinerals)) {
 			temp = botMineralsDiff;
-		} else if ((treeMinerals <= multiplier * oneBiteValue) && (botMineralsDiff > treeMinerals)) {
+		} else if ((treeMinerals <= multiplier * oneBiteValue / 4) && (botMineralsDiff > treeMinerals)) {
 			temp = treeMinerals;
-		} else if ((treeMinerals > multiplier * oneBiteValue) && (botMineralsDiff <= treeMinerals)) {
+		} else if ((treeMinerals > multiplier * oneBiteValue / 4) && (botMineralsDiff <= multiplier * oneBiteValue / 4)) {
 			temp = botMineralsDiff; 
-		} else if ((treeMinerals > multiplier * oneBiteValue) && (botMineralsDiff > treeMinerals)) {
-			temp = oneBiteValue;
+		} else if ((treeMinerals > multiplier * oneBiteValue / 4) && (botMineralsDiff > multiplier * oneBiteValue / 4)) {
+			temp = multiplier * oneBiteValue / 4;
 		}
 
 		botMinerals += multiplier * temp;
-
 		treeMinerals -= multiplier * temp;
 
 		worldMatrix[coordX][coordY].energy[0] = treeEnergy;
@@ -613,34 +612,39 @@ function botEatMeat(params) {
 }
 
 // TODO: Bot eat mineral
-function botEatMineral(params) {
-	return false;
-}
+function botEatMineral(botObject, coordX, coordY) {
+	if (worldMatrix[coordX][coordY].objType == 'mineral') {
+		let mineralObj = worldMatrix[coordX][coordY],
+		minerals = mineralObj.minerals[0],
+		botHungry = botObject.flagHungry,
+		botMinerals = botObject.minerals[0],
+		botMineralsDiff = botObject.minerals[1] - botObject.minerals[0],
+		botPosX = botObject.posX,
+		botPosY = botObject.posY,
+		multiplier = 1,
+		oneBiteValue = 20,
+		temp = 0;
 
-// * Бот проверяет свой уровень энергии
-function botCheckOwnEnergy(botObject) {
-	let energy = botObject.energy[0],
-	maxEnergy = botObject.energy[1],
-	energyLvl = Math.floor(energy / maxEnergy * 10);
-	return energyLvl; // возвращаем уровень от 0 - 10
-}
+		if (botHungry == 1) {
+			multiplier = 2.5;
+		}
 
-// TODO: Bot to meat
-function botToMeat(botObject) {
-	let x = botObject.posX,
-	y = botObject.posY,
-	energy = botObject.energy[0],
-	minerals = botObject.minerals[0],
-	meat = new Meat();
+		if ((minerals <= multiplier * oneBiteValue) && (botMineralsDiff <= minerals)) {
+			temp = botMineralsDiff;
+		} else if ((minerals <= multiplier * oneBiteValue) && (botMineralsDiff > minerals)) {
+			temp = minerals;
+		} else if ((minerals > multiplier * oneBiteValue) && (botMineralsDiff <= multiplier * oneBiteValue)) {
+			temp = botMineralsDiff;
+		} else if ((minerals > multiplier * oneBiteValue) && (botMineralsDiff > multiplier * oneBiteValue)) {
+			temp = multiplier * oneBiteValue;
+		}
 
-	meat.energy[0] = energy;
-	meat.minerals[0] = minerals;
-	worldMatrix[x][y] = meat;
-}
+		botMinerals += multiplier * temp;
+		minerals -= multiplier * temp;
 
-// TODO: Meat to mineral
-function meatToMineral(params) {
-	return false;
+		worldMatrix[coordX][coordY].minerals[0] = minerals;
+		worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
+	}
 }
 
 // TODO: Tree to mineral
