@@ -27,7 +27,7 @@ function Bot(coordX, coordY) {
 
 function Space() {
 	this.objType = 'space';
-	this.energy = [200,8192];
+	this.energy = [271,8192];
 	// TODO: добавить рассеивание энергии в пространстве, поглошение ее деревьями
 	// TODO: и превращение минералов в энергию после "смерти". Также, добавить
 	// TODO: прямое получение энергии пространства из клетки пустого пространства
@@ -35,14 +35,21 @@ function Space() {
 	// TODO: Добавить ген проверки температуры в клетке по направлению взгляда.
 }
 
-function Tree(coordX, coordY) {
+function Tree(coordX, coordY, gen = 'tree') {
 	this.objType = 'tree';
 	this.age = [0,2048];
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [300,2048];
 	this.minerals = [200,2048];
-	this.flagAlive = 1;  
+	this.flagAlive = 1; 
+	this.genus = function(gen) {
+		if (gen == 'grass') || (gen == 'bush') {
+			return gen;
+		} else {
+			return 'tree';
+		}
+	}
 }
 
 function Meat(coordX, coordY) {
@@ -503,7 +510,8 @@ function buildTheWorldWall(arr) {
 //дерева energy -> minerals
 //Если у дерева возраст > определенного значения и достаточно энергии и минералов, создает еще одно дерево
 //в определенном радиусе
-function treeVM(params) {
+function treeVM(treeObject, worldObj) {
+
 	return false;
 }
 
