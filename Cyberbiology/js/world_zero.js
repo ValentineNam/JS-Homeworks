@@ -35,20 +35,21 @@ function Space() {
 	// TODO: Добавить ген проверки температуры в клетке по направлению взгляда.
 }
 
-function Tree(coordX, coordY, gen = 'tree') {
+function Tree(coordX, coordY) {
 	this.objType = 'tree';
 	this.age = [0,2048];
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [300,2048];
 	this.minerals = [200,2048];
-	this.flagAlive = 1; 
-	this.genus = function(gen) {
-		if (gen == 'grass') || (gen == 'bush') {
-			return gen;
-		} else {
-			return 'tree';
-		}
+	this.flagAlive = 1;
+	this.genus = 'tree';
+}
+
+function createNewTree(coordX, coordY, genusType = 'tree') {
+	worldMatrix[coordX][coordY] = new Tree(coordX, coordY);
+	if ((genusType == 'grass') || (genusType == 'bush')) {
+		worldMatrix[coordX][coordY] .genus = genusType;
 	}
 }
 
@@ -129,7 +130,14 @@ worldMatrix[2][5] = new Bot(2, 5);
 
 worldMatrix[2][5]['genom'] = randomGenomGenerator();
 
-worldMatrix[2][3] = new Tree(2, 3);
+createNewTree(2, 3);
+// console.log(`${worldMatrix[2][3].genus}`);
+createNewTree(2, 4, 'grass');
+// console.log(`${worldMatrix[2][4].genus}`);
+createNewTree(3, 4, 'bush');
+// console.log(`${worldMatrix[3][4].genus}`);
+createNewTree(2, 2, 'tree');
+// console.log(`${worldMatrix[2][2].genus}`);
 
 worldMatrix[3][3] = new Mineral(3, 3);
 
