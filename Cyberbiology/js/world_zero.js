@@ -46,13 +46,6 @@ function Tree(coordX, coordY) {
 	this.genus = 'tree';
 }
 
-function createNewTree(coordX, coordY, genusType = 'tree') {
-	worldMatrix[coordX][coordY] = new Tree(coordX, coordY);
-	if ((genusType == 'grass') || (genusType == 'bush')) {
-		worldMatrix[coordX][coordY] .genus = genusType;
-	}
-}
-
 function Meat(coordX, coordY) {
 	this.objType = 'meat';
 	this.age = [0,128];
@@ -131,13 +124,6 @@ worldMatrix[2][5] = new Bot(2, 5);
 worldMatrix[2][5]['genom'] = randomGenomGenerator();
 
 createNewTree(2, 3);
-// console.log(`${worldMatrix[2][3].genus}`);
-createNewTree(2, 4, 'grass');
-// console.log(`${worldMatrix[2][4].genus}`);
-createNewTree(3, 4, 'bush');
-// console.log(`${worldMatrix[3][4].genus}`);
-createNewTree(2, 2, 'tree');
-// console.log(`${worldMatrix[2][2].genus}`);
 
 worldMatrix[3][3] = new Mineral(3, 3);
 
@@ -521,6 +507,13 @@ function buildTheWorldWall(arr) {
 function treeVM(treeObject, worldObj) {
 
 	return false;
+}
+
+function createNewTree(coordX, coordY, genusType = 'tree') {
+	worldMatrix[coordX][coordY] = new Tree(coordX, coordY);
+	if ((genusType == 'grass') || (genusType == 'bush')) {
+		worldMatrix[coordX][coordY] .genus = genusType;
+	}
 }
 
 // TODO: Minerals VM
