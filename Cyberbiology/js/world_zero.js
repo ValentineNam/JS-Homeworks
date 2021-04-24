@@ -567,13 +567,14 @@ function treeMakeChild(treeObject, treeGenusType, worldObj) {
 	difX = getRandomInt(-treeGenusType, treeGenusType),
 	difY = getRandomInt(-treeGenusType, treeGenusType);
 
-	while (difX = 0 && difY = 0) {
+	while ((difX = 0) && (difY = 0)) {
 		difX = getRandomInt(-treeGenusType, treeGenusType),
 		difY = getRandomInt(-treeGenusType, treeGenusType);
 	}
 
 	// ToDo: Дописать проверку пустоты клетки в позиции смещенной на difX/Y по отношению к дереву
 	// ToDo: Проверить, что клекта сущетсвует и не является стеной
+	// ToDo: Если возможно - то создаем новое дерево, с половиной ресурсов
 }
 
 // TODO: Minerals VM
