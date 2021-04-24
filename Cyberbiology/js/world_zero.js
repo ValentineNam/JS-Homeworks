@@ -124,6 +124,12 @@ worldMatrix[2][5] = new Bot(2, 5);
 worldMatrix[2][5]['genom'] = randomGenomGenerator();
 
 createNewTree(2, 3);
+createNewTree(2, 4, 'grass');
+console.log(`${worldMatrix[2][4].energy}`);
+console.log(`${worldMatrix[2][4].minerals}`);
+createNewTree(3, 1, 'bush');
+console.log(`${worldMatrix[3][1].energy}`);
+console.log(`${worldMatrix[3][1].minerals}`);
 
 worldMatrix[3][3] = new Mineral(3, 3);
 
@@ -241,7 +247,7 @@ function genomVM(botObject, worldObj) {
 				break;
 			case 4: // Bot checks his energy lvl
 			// Если энергия от 0 до 9% то переходим к команде в адресе +1, 10-59% => +2, 60-99% => +3, 100% => +4
-				let eLvl = botCheckOwnEnergy(botObject);
+				let eLvl = checkOwnParamLvl(botObject);
 				if (eLvl = 0) {
 					adr = incAdr(adr);
 				} else if ((eLvl >= 1) && (eLvl <= 5)) {
@@ -288,14 +294,14 @@ function incAdr(adr) {
 	return adr;
 }
 
-function incEnergy(energy, increment) {
-	(energy + increment <= 999) ?
-	(energy += increment) :
-	(energy = 999);
-	if (energy + increment <= 0) {
-		energy = 0;
+function incParam(paramsArray, increment) {
+	(paramsArray[0] + increment <= paramsArray[1]) ?
+	(paramsArray[0] += increment) :
+	(paramsArray[0] = paramsArray[1]);
+	if (paramsArray[0] + increment <= 0) {
+		paramsArray[0] = 0;
 	} 
-	return energy;
+	return paramsArray[0];
 }
 
 function decEnergy(energy, increment) {
@@ -505,7 +511,34 @@ function buildTheWorldWall(arr) {
 //Если у дерева возраст > определенного значения и достаточно энергии и минералов, создает еще одно дерево
 //в определенном радиусе
 function treeVM(treeObject, worldObj) {
+	let posX = treeObject.posX,
+	posY = treeObject.posY,
+	treeEnergy = treeObject.energy[0],
+	maxEnergy = treeObject.energy[1],
+	treeMinerals = treeObject.minerals[0],
+	maxMinerals = treeObject.minerals[1],
+	energyLvl = checkOwnParamLvl(treeObject),
+	mineralsLvl = checkOwnParamLvl(treeObject, 'minerals'),
+	ageLvl = checkOwnParamLvl(treeObject, 'age'),
+	treeGenusType = 3,
+	growSpeed = 1; // 1 - grass, 2 - bush, 3 - tree
 
+	if (treeObject.genus == 'grass') {
+		treeGenusType = 1;
+	} else if (treeObject.genus == 'bush') {
+		treeGenusType = 2;
+	}
+
+	growSpeed = 20 * Math.pow(2, (2 + treeGenusType)); // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
+
+	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (ageLvl >= 1)) {
+		console.log(`make a child ${treeObject.posX}-${treeObject.posY}`);
+	}
+
+	treeEnergy = incParam(treeObject.energy, growSpeed);
+	worldObj[posX][posY].energy[0] = treeEnergy;
+	treeMinerals = incParam(treeObject.minerals, growSpeed);
+	worldObj[posX][posY].minerals[0] = treeMinerals;
 	return false;
 }
 
@@ -516,12 +549,31 @@ function createNewTree(coordX, coordY, genusType = 'tree') {
 		if (genusType == 'grass') {
 			newTree.energy[1] = 256;
 			newTree.minerals[1] = 256;
+			newTree.age[1] = 256;
 		} else {
 			newTree.energy[1] = 1024;
 			newTree.minerals[1] = 1024;
+			newTree.age[1] = 1024;
 		}
 	}
 	worldMatrix[coordX][coordY] = newTree;
+}
+
+function treeMakeChild(treeObject, treeGenusType, worldObj) {
+	let parentX = treeObject.posX,
+	parentY = treeObject.posY,
+	newTreeX,
+	newTreeY,
+	difX = getRandomInt(-treeGenusType, treeGenusType),
+	difY = getRandomInt(-treeGenusType, treeGenusType);
+
+	while (difX = 0 && difY = 0) {
+		difX = getRandomInt(-treeGenusType, treeGenusType),
+		difY = getRandomInt(-treeGenusType, treeGenusType);
+	}
+
+	// ToDo: Дописать проверку пустоты клетки в позиции смещенной на difX/Y по отношению к дереву
+	// ToDo: Проверить, что клекта сущетсвует и не является стеной
 }
 
 // TODO: Minerals VM
@@ -635,11 +687,15 @@ function botEatMineral(params) {
 }
 
 // * Бот проверяет свой уровень энергии
-function botCheckOwnEnergy(botObject) {
-	let energy = botObject.energy[0],
-	maxEnergy = botObject.energy[1],
-	energyLvl = Math.floor(energy / maxEnergy * 10);
-	return energyLvl; // возвращаем уровень от 0 - 10
+function checkOwnParamLvl(botObject, paramType = 'energy') {
+	if (botObject[paramType] != undefined) {
+		let param = botObject[paramType][0],
+		maxParam = botObject[paramType][1],
+		paramLvl = Math.floor(param / maxParam * 10);
+		return paramLvl; // возвращаем уровень от 0 - 10
+	} else {
+		return false;
+	}
 }
 
 // TODO: Bot to meat
@@ -713,14 +769,14 @@ function isRelative(a, b) { //передаем геномы ботов
 }
 
 let timerId = setTimeout(function tick() {
-	console.clear();
+	// console.clear();
 	console.log(`*******`);
 	console.log(`step ${worldTime}`);
 	main(worldMatrix);
 	render(worldMatrix);
 	timerId = setTimeout(tick, 500); // (*)
 	worldTime++;
-	if (worldTime >= 20) {
+	if (worldTime >= 200) {
 		clearTimeout(timerId);
 	}
 }, 500); 
