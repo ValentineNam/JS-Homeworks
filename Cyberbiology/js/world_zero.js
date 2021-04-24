@@ -510,10 +510,18 @@ function treeVM(treeObject, worldObj) {
 }
 
 function createNewTree(coordX, coordY, genusType = 'tree') {
-	worldMatrix[coordX][coordY] = new Tree(coordX, coordY);
+	let newTree = new Tree(coordX, coordY);
 	if ((genusType == 'grass') || (genusType == 'bush')) {
-		worldMatrix[coordX][coordY] .genus = genusType;
+		newTree.genus = genusType;
+		if (genusType == 'grass') {
+			newTree.energy[1] = 256;
+			newTree.minerals[1] = 256;
+		} else {
+			newTree.energy[1] = 1024;
+			newTree.minerals[1] = 1024;
+		}
 	}
+	worldMatrix[coordX][coordY] = newTree;
 }
 
 // TODO: Minerals VM
