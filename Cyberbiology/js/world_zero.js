@@ -3,8 +3,8 @@
 const CANVAS_WIDTH = 800,
 	CANVAS_HEIGTH = 600,
 	GENOM_LENGTH = 16,
-	WORLD_X = 7,
-	WORLD_Y = 7;
+	WORLD_X = 15,
+	WORLD_Y = 15;
 
 let worldTime = 0;
 
@@ -517,9 +517,9 @@ function treeVM(treeObject, worldObj) {
 	maxEnergy = treeObject.energy[1],
 	treeMinerals = treeObject.minerals[0],
 	maxMinerals = treeObject.minerals[1],
-	energyLvl = checkOwnParamLvl(treeObject),
-	mineralsLvl = checkOwnParamLvl(treeObject, 'minerals'),
-	ageLvl = checkOwnParamLvl(treeObject, 'age'),
+	energyLvl,
+	mineralsLvl,
+	ageLvl,
 	treeGenusType = 3,
 	growSpeed = 1; // 1 - grass, 2 - bush, 3 - tree
 
@@ -531,15 +531,20 @@ function treeVM(treeObject, worldObj) {
 
 	growSpeed = 20 * Math.pow(2, (2 + treeGenusType)); // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
 
-	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (ageLvl >= 1)) {
-		console.log(`make a child ${treeObject.posX}-${treeObject.posY}`);
-	}
-
 	treeEnergy = incParam(treeObject.energy, growSpeed);
 	worldObj[posX][posY].energy[0] = treeEnergy;
 	treeMinerals = incParam(treeObject.minerals, growSpeed);
 	worldObj[posX][posY].minerals[0] = treeMinerals;
-	return false;
+	
+	energyLvl = checkOwnParamLvl(treeObject);
+	mineralsLvl = checkOwnParamLvl(treeObject, 'minerals');
+	ageLvl = checkOwnParamLvl(treeObject, 'age');
+
+	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (ageLvl >= 1)) {
+		console.log(`energy: ${treeObject.energy[0]}`);
+		console.log(`make a child ${treeObject.posX}-${treeObject.posY}`);
+		treeMakeChild(treeObject, treeGenusType, worldObj)
+	}
 }
 
 function createNewTree(coordX, coordY, genusType = 'tree') {
@@ -563,17 +568,47 @@ function treeMakeChild(treeObject, treeGenusType, worldObj) {
 	let parentX = treeObject.posX,
 	parentY = treeObject.posY,
 	newTreeX,
-	newTreeY,
-	difX = getRandomInt(-treeGenusType, treeGenusType),
-	difY = getRandomInt(-treeGenusType, treeGenusType);
+	newTreeY;
+	// difX = getRandomInt(-treeGenusType, treeGenusType),
+	// difY = getRandomInt(-treeGenusType, treeGenusType);
 
-	while ((difX = 0) && (difY = 0)) {
-		difX = getRandomInt(-treeGenusType, treeGenusType),
+	for (let index = 15; index--; ) {
+		// console.log(`Itter ${16 - index}`);
+		let difX = getRandomInt(-treeGenusType, treeGenusType),
 		difY = getRandomInt(-treeGenusType, treeGenusType);
+		
+		while ((difX == 0) && (difY == 0)) {
+			difX = getRandomInt(-treeGenusType, treeGenusType),
+			difY = getRandomInt(-treeGenusType, treeGenusType);
+		}
+	
+		newTreeX = parentX + difX;
+		newTreeY = parentY + difY;
+		console.log(`New tree at: ${newTreeX }-${newTreeY}`);
+	
+		if ((newTreeX > 0 && newTreeX < WORLD_X) && (newTreeY > 0 && newTreeY < WORLD_Y)) {
+			console.log(`${worldObj[newTreeX][newTreeY].objType}`);
+			if (worldObj[newTreeX][newTreeY].objType == 'space') {
+				let temp = Math.round(worldObj[parentX][parentY].energy[0] / 2);
+				console.log(`temp : ${temp}`);
+				// let parentGenus = worldObj[parentX][parentY].genus;
+				createNewTree(newTreeX, newTreeY, treeGenusType);
+				// worldObj[newTreeX][newTreeY].genus = treeGenusType;
+				worldObj[newTreeX][newTreeY].energy[0] = temp;
+				worldObj[parentX][parentY].energy[0] -= temp;
+				temp = Math.round(worldObj[parentX][parentY].minerals[0] / 2);
+				worldObj[newTreeX][newTreeY].minerals[0] = temp;
+				worldObj[parentX][parentY].minerals[0] -= temp;
+				index = 0;
+			} else {
+				console.log(`continue`);
+				continue;
+			}		
+		}
 	}
-
+	console.log(`Old tree energy is ${worldObj[parentX][parentY].energy[0]}`);
 	// ToDo: Дописать проверку пустоты клетки в позиции смещенной на difX/Y по отношению к дереву
-	// ToDo: Проверить, что клекта сущетсвует и не является стеной
+	// ToDo: Проверить, что клекта сущеcтсвует и не является стеной
 	// ToDo: Если возможно - то создаем новое дерево, с половиной ресурсов
 }
 
