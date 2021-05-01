@@ -4,7 +4,8 @@ const CANVAS_WIDTH = 800,
 	CANVAS_HEIGTH = 600,
 	GENOM_LENGTH = 16,
 	WORLD_X = 15,
-	WORLD_Y = 15;
+	WORLD_Y = 15,
+	MUTATION_FACTOR = 15;
 
 let worldTime = 0;
 
@@ -120,20 +121,15 @@ emptySpaceGenerator(worldMatrix);
 buildTheWorldWall(worldMatrix);
 
 createNewBot(2, 5, 'randomGenom');
+createNewBot(5, 5, 'randomGenom');
+createNewBot(2, 7, 'randomGenom');
+createNewBot(7, 9, 'randomGenom');
 
-// worldMatrix[2][5]['genom'] = randomGenomGenerator();
+createNewTree(7, 7);
+createNewTree(4, 4, 'grass');
+createNewTree(9, 9, 'bush');
 
-createNewTree(2, 3);
-createNewTree(2, 4, 'grass');
-console.log(`${worldMatrix[2][4].energy}`);
-console.log(`${worldMatrix[2][4].minerals}`);
-createNewTree(3, 1, 'bush');
-console.log(`${worldMatrix[3][1].energy}`);
-console.log(`${worldMatrix[3][1].minerals}`);
-
-worldMatrix[3][3] = new Mineral(3, 3);
-
-botMove(2, 2, 4, 1);
+worldMatrix[7][5] = new Mineral(7, 5);
 
 function main(worldObj) {
 	clearMoveParams(worldObj);
@@ -147,6 +143,9 @@ function vmsFunc(worldObj) {
             if (elem.objType == 'bot') {
                 if (elem.flagMoved == 0) {
 					genomVM(elem, worldObj);
+					if (botCanMakeChild(elem)) {
+						botCreateChild(elem, worldObj)
+					}
 				}
 				elem.age[0] += 1;
             } else if (elem.objType == 'tree') {
@@ -260,7 +259,7 @@ function genomVM(botObject, worldObj) {
 				energy = decEnergy(energy, 1);
 				actCounter--;
 				break;
-			case 5:
+			case 5: //Bot eat tree from front cell
 				if (frontObjectType == 'tree') {
 					energy = botEatTree(botObject, frontX, frontY);
 					energy = decEnergy(energy, 1);
@@ -533,18 +532,14 @@ function treeVM(treeObject, worldObj) {
 
 	treeEnergy = incParam(treeObject.energy, growSpeed);
 	worldObj[posX][posY].energy[0] = treeEnergy;
-	console.log(`Energy is ${worldObj[posX][posY].energy[0]}`);
 	treeMinerals = incParam(treeObject.minerals, growSpeed);
 	worldObj[posX][posY].minerals[0] = treeMinerals;
 	
 	energyLvl = checkOwnParamLvl(treeObject);
 	mineralsLvl = checkOwnParamLvl(treeObject, 'minerals');
 	age = treeObject.age[0];
-	// ageLvl = checkOwnParamLvl(treeObject, 'age');
 
-	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (age >= 20)) {
-		console.log(`energy: ${treeObject.energy[0]}`);
-		console.log(`make a child ${treeObject.posX}-${treeObject.posY}`);
+	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (age >= 40)) {
 		treeMakeChild(treeObject, treeGenusType, worldObj)
 	}
 }
@@ -571,11 +566,8 @@ function treeMakeChild(treeObject, treeGenusType, worldObj) {
 	parentY = treeObject.posY,
 	newTreeX,
 	newTreeY;
-	// difX = getRandomInt(-treeGenusType, treeGenusType),
-	// difY = getRandomInt(-treeGenusType, treeGenusType);
 
 	for (let index = 15; index--; ) {
-		// console.log(`Itter ${16 - index}`);
 		let difX = getRandomInt(-treeGenusType, treeGenusType),
 		difY = getRandomInt(-treeGenusType, treeGenusType);
 		
@@ -586,16 +578,11 @@ function treeMakeChild(treeObject, treeGenusType, worldObj) {
 	
 		newTreeX = parentX + difX;
 		newTreeY = parentY + difY;
-		console.log(`New tree at: ${newTreeX }-${newTreeY}`);
 	
 		if ((newTreeX > 0 && newTreeX < WORLD_X) && (newTreeY > 0 && newTreeY < WORLD_Y)) {
-			console.log(`${worldObj[newTreeX][newTreeY].objType}`);
 			if (worldObj[newTreeX][newTreeY].objType == 'space') {
 				let temp = Math.round(worldObj[parentX][parentY].energy[0] / 2);
-				console.log(`temp : ${temp}`);
-				// let parentGenus = worldObj[parentX][parentY].genus;
 				createNewTree(newTreeX, newTreeY, treeGenusType);
-				// worldObj[newTreeX][newTreeY].genus = treeGenusType;
 				worldObj[newTreeX][newTreeY].energy[0] = temp;
 				worldObj[parentX][parentY].energy[0] = worldObj[parentX][parentY].energy[0] - temp;
 				temp = Math.round(worldObj[parentX][parentY].minerals[0] / 2);
@@ -603,16 +590,10 @@ function treeMakeChild(treeObject, treeGenusType, worldObj) {
 				worldObj[parentX][parentY].minerals[0] = worldObj[parentX][parentY].minerals[0] - temp;
 				index = 0;
 			} else {
-				console.log(`continue`);
 				continue;
 			}		
 		}
 	}
-	console.log(`Old tree energy is ${worldObj[parentX][parentY].energy[0]}`);
-	console.log(`Old tree energy is ${worldObj[parentX][parentY].energy}`);
-	// ToDo: Дописать проверку пустоты клетки в позиции смещенной на difX/Y по отношению к дереву
-	// ToDo: Проверить, что клекта сущеcтвует и не является стеной
-	// ToDo: Если возможно - то создаем новое дерево, с половиной ресурсов
 }
 
 // TODO: Minerals VM
@@ -625,18 +606,69 @@ function meatVM(params) {
 }
 
 function createNewBot(coordX, coordY, ...mode) {
+	let newBot = new Bot(coordX, coordY),
+	mutationChance,
+	genom = newBot['genom'];
 
-	let newBot = new Bot(coordX, coordY);
 	if (mode == 'randomGenom') {
-		newBot['genom'] = randomGenomGenerator()
-		// console.log(`random genom generated`);
+		genom = randomGenomGenerator()
+	} else if (mode[0] == 'parentGenom') {
+		genom = mode[1];
 	}
+	mutationChance = getRandomInt(0, 100);
+	if (mutationChance <= MUTATION_FACTOR) {
+		genom = genomMutate(genom);
+	}
+	newBot['genom'] = genom;
 	worldMatrix[coordX][coordY] = newBot;
 }
 
+function botCanMakeChild(botObject) {
+	let ageLvl = checkOwnParamLvl(botObject, 'age'),
+	energyLvl = checkOwnParamLvl(botObject);
+
+	if (energyLvl >= 7 && ageLvl >=0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 // TODO: Create new child
-function createChild(params) {
-	return false;
+function botCreateChild(botObject, worldObj) {
+	let parentX = botObject.posX,
+	parentY = botObject.posY,
+	newBotX,
+	newBotY;
+
+	for (let index = 15; index--; ) {
+		let difX = getRandomInt(-1, 1),
+		difY = getRandomInt(-1, 1);
+		
+		while ((difX == 0) && (difY == 0)) {
+			difX = getRandomInt(-1, 1),
+			difY = getRandomInt(-1, 1);
+		}
+	
+		newBotX = parentX + difX;
+		newBotY = parentY + difY;
+	
+		if ((newBotX > 0 && newBotX < WORLD_X) && (newBotY > 0 && newBotY < WORLD_Y)) {
+			if (worldObj[newBotX][newBotY].objType == 'space') {
+				let temp = Math.round(worldObj[parentX][parentY].energy[0] / 2);
+				let parentGenom = worldObj[parentX][parentY].genom;
+				createNewBot(newBotX, newBotY, ['parentGenom', parentGenom]);
+				worldObj[newBotX][newBotY].energy[0] = temp;
+				worldObj[parentX][parentY].energy[0] = worldObj[parentX][parentY].energy[0] - temp;
+				temp = Math.round(worldObj[parentX][parentY].minerals[0] / 2);
+				worldObj[newBotX][newBotY].minerals[0] = temp;
+				worldObj[parentX][parentY].minerals[0] = worldObj[parentX][parentY].minerals[0] - temp;
+				index = 0;
+			} else {
+				continue;
+			}		
+		}
+	}
 }
 
 // TODO: Check flags
