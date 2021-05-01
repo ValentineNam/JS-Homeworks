@@ -198,6 +198,7 @@ function genomVM(botObject, worldObj) {
 		switch (botGenom[adr]) {
 			case 0: // Mutate random gen
 				adr = incAdr(adr);
+				energy = decEnergy(energy, 1);
 				genomMutate(botGenom);
 				actCounter--;
 				break;
@@ -227,6 +228,12 @@ function genomVM(botObject, worldObj) {
 						};
 					};
 				} else {
+					if (direction != 0) {
+						worldObj[frontX][frontY].direction = 0;
+						console.log(`Set bot's direction to 0 at pos ${posX} - ${posY}`);
+					}
+					// adr = incAdr(adr);
+					energy = decEnergy(energy, 1); //спим - тратим 1 ед энергии
 					breakFlag = 1;
 					break;
 				}
@@ -274,7 +281,7 @@ function genomVM(botObject, worldObj) {
 				break;
 		}
 		botObject.energy[0] = energy;
-		if (botObject.energy[0] == 0) {
+		if (botObject.energy[0] <= 0) {
 			revertAliveFlag(botObject);
 		}
 	}
@@ -605,20 +612,22 @@ function mineralsVM(params) {
 function meatVM(params) {
 }
 
-function createNewBot(coordX, coordY, ...mode) {
+function createNewBot(coordX, coordY, ...[mode, parentGenom]) {
 	let newBot = new Bot(coordX, coordY),
 	mutationChance,
 	genom = newBot['genom'];
 
 	if (mode == 'randomGenom') {
-		genom = randomGenomGenerator()
-	} else if (mode[0] == 'parentGenom') {
-		genom = mode[1];
+		genom = randomGenomGenerator();
+	} else if (mode == 'parentGenom') {
+		genom = parentGenom;
 	}
+
 	mutationChance = getRandomInt(0, 100);
 	if (mutationChance <= MUTATION_FACTOR) {
 		genom = genomMutate(genom);
 	}
+
 	newBot['genom'] = genom;
 	worldMatrix[coordX][coordY] = newBot;
 }
@@ -657,7 +666,7 @@ function botCreateChild(botObject, worldObj) {
 			if (worldObj[newBotX][newBotY].objType == 'space') {
 				let temp = Math.round(worldObj[parentX][parentY].energy[0] / 2);
 				let parentGenom = worldObj[parentX][parentY].genom;
-				createNewBot(newBotX, newBotY, ['parentGenom', parentGenom]);
+				createNewBot(newBotX, newBotY, 'parentGenom', parentGenom);
 				worldObj[newBotX][newBotY].energy[0] = temp;
 				worldObj[parentX][parentY].energy[0] = worldObj[parentX][parentY].energy[0] - temp;
 				temp = Math.round(worldObj[parentX][parentY].minerals[0] / 2);
@@ -742,7 +751,6 @@ function botEatTree(botObject, coordX, coordY) {
 		}
 
 		botMinerals += multiplier * temp;
-
 		treeMinerals -= multiplier * temp;
 
 		worldMatrix[coordX][coordY].energy[0] = treeEnergy;
