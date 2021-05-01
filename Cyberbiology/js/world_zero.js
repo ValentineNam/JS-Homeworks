@@ -119,9 +119,9 @@ emptySpaceGenerator(worldMatrix);
 
 buildTheWorldWall(worldMatrix);
 
-worldMatrix[2][5] = new Bot(2, 5);
+createNewBot(2, 5, 'randomGenom');
 
-worldMatrix[2][5]['genom'] = randomGenomGenerator();
+// worldMatrix[2][5]['genom'] = randomGenomGenerator();
 
 createNewTree(2, 3);
 createNewTree(2, 4, 'grass');
@@ -444,7 +444,6 @@ function botChangeDirection(direction, spin) {
 // TODO: функция проверки объекта в указанных координатах
 function botCheckDirection(botGenom, worldArray, coordX, coordY) { // * получаем координаты, возвращаем ответ 
 	// * если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
-	// TODO: дописать передачу координат и определение типа объекта
 	let objType = worldArray[coordX][coordY].objType;
 	let x;
 	switch (objType) {
@@ -519,7 +518,8 @@ function treeVM(treeObject, worldObj) {
 	maxMinerals = treeObject.minerals[1],
 	energyLvl,
 	mineralsLvl,
-	ageLvl,
+	// ageLvl,
+	age,
 	treeGenusType = 3,
 	growSpeed = 1; // 1 - grass, 2 - bush, 3 - tree
 
@@ -529,18 +529,20 @@ function treeVM(treeObject, worldObj) {
 		treeGenusType = 2;
 	}
 
-	growSpeed = 20 * Math.pow(2, (2 + treeGenusType)); // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
+	growSpeed = Math.pow(2, (2 + treeGenusType)); // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
 
 	treeEnergy = incParam(treeObject.energy, growSpeed);
 	worldObj[posX][posY].energy[0] = treeEnergy;
+	console.log(`Energy is ${worldObj[posX][posY].energy[0]}`);
 	treeMinerals = incParam(treeObject.minerals, growSpeed);
 	worldObj[posX][posY].minerals[0] = treeMinerals;
 	
 	energyLvl = checkOwnParamLvl(treeObject);
 	mineralsLvl = checkOwnParamLvl(treeObject, 'minerals');
-	ageLvl = checkOwnParamLvl(treeObject, 'age');
+	age = treeObject.age[0];
+	// ageLvl = checkOwnParamLvl(treeObject, 'age');
 
-	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (ageLvl >= 1)) {
+	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (age >= 20)) {
 		console.log(`energy: ${treeObject.energy[0]}`);
 		console.log(`make a child ${treeObject.posX}-${treeObject.posY}`);
 		treeMakeChild(treeObject, treeGenusType, worldObj)
@@ -595,10 +597,10 @@ function treeMakeChild(treeObject, treeGenusType, worldObj) {
 				createNewTree(newTreeX, newTreeY, treeGenusType);
 				// worldObj[newTreeX][newTreeY].genus = treeGenusType;
 				worldObj[newTreeX][newTreeY].energy[0] = temp;
-				worldObj[parentX][parentY].energy[0] -= temp;
+				worldObj[parentX][parentY].energy[0] = worldObj[parentX][parentY].energy[0] - temp;
 				temp = Math.round(worldObj[parentX][parentY].minerals[0] / 2);
 				worldObj[newTreeX][newTreeY].minerals[0] = temp;
-				worldObj[parentX][parentY].minerals[0] -= temp;
+				worldObj[parentX][parentY].minerals[0] = worldObj[parentX][parentY].minerals[0] - temp;
 				index = 0;
 			} else {
 				console.log(`continue`);
@@ -607,8 +609,9 @@ function treeMakeChild(treeObject, treeGenusType, worldObj) {
 		}
 	}
 	console.log(`Old tree energy is ${worldObj[parentX][parentY].energy[0]}`);
+	console.log(`Old tree energy is ${worldObj[parentX][parentY].energy}`);
 	// ToDo: Дописать проверку пустоты клетки в позиции смещенной на difX/Y по отношению к дереву
-	// ToDo: Проверить, что клекта сущеcтсвует и не является стеной
+	// ToDo: Проверить, что клекта сущеcтвует и не является стеной
 	// ToDo: Если возможно - то создаем новое дерево, с половиной ресурсов
 }
 
@@ -621,9 +624,14 @@ function mineralsVM(params) {
 function meatVM(params) {
 }
 
-// TODO: Create new bot
-function createBot(params) {
-	return false;
+function createNewBot(coordX, coordY, ...mode) {
+
+	let newBot = new Bot(coordX, coordY);
+	if (mode == 'randomGenom') {
+		newBot['genom'] = randomGenomGenerator()
+		// console.log(`random genom generated`);
+	}
+	worldMatrix[coordX][coordY] = newBot;
 }
 
 // TODO: Create new child
