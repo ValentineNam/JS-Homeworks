@@ -195,6 +195,7 @@ function genomVM(botObject, worldObj) {
 			frontY = frontCoordinates[1];
 			frontObjectType = worldObj[frontX][frontY].objType;		
 		}
+
 		switch (botGenom[adr]) {
 			case 0: // Mutate random gen
 				adr = incAdr(adr);
@@ -203,51 +204,44 @@ function genomVM(botObject, worldObj) {
 				actCounter--;
 				break;
 			case 1: // Move front
-			// Понять, что за координаты спереди (по линии взгляда)
+			// Понять, что за объект в координатах спереди (по линии взгляда)
 			// Если не смотрит никуда (спит), то переходим к команде в адресе +1
 			// Если спереди есть стена, то переходим к команде в адресе +2
 			// Если спереди не пустое пространство и не стена, то переходим к команде в адресе +3
 			// Если спереди пустое пространство, то шагаем на клетку вперед переходим к команде +4
-				if  (energy > botSpeed) {
-					if (direction == 0) {
+				if  (energy <= botSpeed) {
+					if (direction != 0) {
+						direction = 0;
+					}
+				} else {
+					if (frontObjectType == 'wall') {
+						adr = jumpAdr(adr, 2);
+						energy = decEnergy(energy, 1);
+					} else if ((frontObjectType == 'bot') || (frontObjectType == 'tree') || (frontObjectType == 'mineral')) {
+						adr = jumpAdr(adr, 3);
+						energy = decEnergy(energy, 1);
+					} else if (frontObjectType == 'space') {
+						botMove(posX, posY, frontX, frontY);
+						adr = jumpAdr(adr, 4);
+						breakFlag = 1; // Перемещение это прерывающая активность операция 
+						botObject.flagMoved = 1;
+						energy = decEnergy(energy, botSpeed); //при перемещении уменьшаем энергию на величину botSpeed
+					} else if (direction == 0) {
 						adr = incAdr(adr);
 						energy = decEnergy(energy, 1); //спим - тратим 1 ед энергии
-					} else {
-						if (frontObjectType == 'wall') {
-							adr = jumpAdr(adr, 2);
-							energy = decEnergy(energy, 1);
-						} else if ((frontObjectType == 'bot') || (frontObjectType == 'tree') || (frontObjectType == 'mineral')) {
-							adr = jumpAdr(adr, 3);
-							energy = decEnergy(energy, 1);
-						} else if (frontObjectType == 'space') {
-							botMove(posX, posY, frontX, frontY);
-							adr = jumpAdr(adr, 4);
-							breakFlag = 1; // Перемещение это прерывающая активность операция 
-							botObject.flagMoved = 1;
-							energy = decEnergy(energy, botSpeed); //при перемещении уменьшаем энергию на величину botSpeed
-						};
-					};
-				} else {
-					if (direction != 0) {
-						worldObj[frontX][frontY].direction = 0;
-						console.log(`Set bot's direction to 0 at pos ${posX} - ${posY}`);
 					}
-					// adr = incAdr(adr);
-					energy = decEnergy(energy, 1); //спим - тратим 1 ед энергии
-					breakFlag = 1;
-					break;
 				}
-				actCounter--;
+				breakFlag = 1;
 				break;
 			case 2: // Bot change direction right
 				adr = incAdr(adr);
-				direction = botObject.direction = botChangeDirection(direction, 'rigth');
+				direction = botChangeDirection(direction, 'right');
 				energy = decEnergy(energy, Math.ceil(botSpeed/8));
 				actCounter--;
 				break;
 			case 3: // Bot change direction left
 				adr = incAdr(adr);
-				direction = botObject.direction = botChangeDirection(direction, 'left');
+				direction = botChangeDirection(direction, 'left');
 				energy = decEnergy(energy, Math.ceil(botSpeed/8));
 				actCounter--;
 				break;
@@ -280,12 +274,15 @@ function genomVM(botObject, worldObj) {
 				breakFlag = 1;
 				break;
 		}
+
+		botObject.direction = direction;
 		botObject.energy[0] = energy;
 		if (botObject.energy[0] <= 0) {
 			revertAliveFlag(botObject);
 		}
 	}
 	checkBotAge(botObject);
+	checkBotEnergy(botObject);
 }
 
 function jumpAdr(adr, step) {
@@ -433,7 +430,7 @@ function botChangeDirection(direction, spin) {
 					direction = 8;
 				}
 				break;
-			case 'rigth':
+			case 'right':
 				if (direction != 8) {
 					direction++;
 				} else {
@@ -815,6 +812,14 @@ function checkBotAge(botObject) {
 	let age = botObject.age[0],
 	maxAge = botObject.age[1];
 	if (age >= maxAge) {
+		botToMeat(botObject);
+	}
+}
+
+// * Проверяем энергию бота
+function checkBotEnergy(botObject) {
+	let energy = botObject.energy[0];
+	if (energy <= 0) {
 		botToMeat(botObject);
 	}
 }
