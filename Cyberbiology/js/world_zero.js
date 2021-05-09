@@ -50,7 +50,7 @@ function Tree(coordX, coordY) {
 
 function Meat(coordX, coordY) {
 	this.objType = 'meat';
-	this.age = [0,128];
+	this.age = [0,64];
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [20,256];
@@ -168,7 +168,14 @@ function vmsFunc(worldObj) {
             } else if (elem.objType == 'tree') {
 				treeVM(elem, worldObj);
 				elem.age[0] += 1;
+            } else if (elem.objType == 'meat') {
+				meatVM(elem);
+				elem.age[0] += 1;
+				if (elem.age[0] >= elem.age[1]) {
+					meatToMineral(elem, worldObj);
+				}
             } else if (elem.objType == 'mineral') {
+				mineralsVM(elem);
 				elem.age[0] += 1;
             } else if (elem.objType == 'space') {
             }
@@ -675,7 +682,24 @@ function createNewMineral(coordX, coordY, ...[energy, minerals]) {
 }
 
 // TODO: Meat VM
-function meatVM(params) {
+function meatVM(meatObject, worldObj) {
+	crystalization(meatObject, worldObj);
+	if (meatObject.age[0] >= meatObject.age[1]) {
+		revertAliveFlag(meatObject);
+	}
+}
+
+function crystalization(targetObject, worldObj) {
+	if ((targetObject.energy[0] >= 4) && (targetObject.minearls[0] < targetObject.minearls[1])) {
+		let posX = targetObject.posX,
+		posY = targetObject.posY,
+		energy = targetObject.energy[0],
+		minerals = targetObject.minerals[0];
+		energy = decEnergy(energy, 4);
+		minerals += incParam(minerlal, 1);
+		worldObj[posX][posY].energy[0] = energy;
+		worldObj[posX][posY].minerals[0] = minerals;	
+	}
 }
 
 function createNewBot(coordX, coordY, ...[mode, parentGenom]) {
@@ -747,7 +771,8 @@ function botCreateChild(botObject, worldObj) {
 }
 
 // TODO: Check flags
-function checkFlags(params) {
+// ToDo: Передаем объект и флаг, проверяем значение для поля "флаг" и если 1 - возвращаем true иначе false
+function checkFlags(targetObject, targetFlag) {
 	return false;
 }
 
@@ -762,7 +787,7 @@ function revertAliveFlag(targetObject) {
 	return false;
 }
 
-// TODO: Give resources in some direction
+// TODO: Bot give resources in some direction
 function giveResources(params) {
 	return false;
 }
@@ -916,8 +941,17 @@ function botToMeat(botObject) {
 }
 
 // TODO: Meat to mineral
-function meatToMineral(params) {
-	return false;
+function meatToMineral(meatObject, worldObj) {
+	let posX = meatObject.posX,
+		posY = meatObject.posY,
+		energy = meatObject.energy,
+		minerals = meatObject.minerals,
+		mineralObj = new Mineral(posX, posY);
+
+		mineralObj.energy = energy;
+		mineralObj.minerals = minerals;
+
+	worldObj[posX][posY] = mineralObj;
 }
 
 // TODO: Tree to mineral
