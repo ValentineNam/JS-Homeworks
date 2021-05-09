@@ -933,7 +933,7 @@ function botToMeat(botObject) {
 	y = botObject.posY,
 	energy = botObject.energy[0],
 	minerals = botObject.minerals[0],
-	meat = new Meat();
+	meat = new Meat(x, y);
 
 	meat.energy[0] = energy;
 	meat.minerals[0] = minerals;
@@ -942,16 +942,16 @@ function botToMeat(botObject) {
 
 // TODO: Meat to mineral
 function meatToMineral(meatObject, worldObj) {
-	let posX = meatObject.posX,
-		posY = meatObject.posY,
+	let x = meatObject.posX,
+		y = meatObject.posY,
 		energy = meatObject.energy,
 		minerals = meatObject.minerals,
-		mineralObj = new Mineral(posX, posY);
+		mineralObj = new Mineral(x, y);
 
 		mineralObj.energy = energy;
 		mineralObj.minerals = minerals;
 
-	worldObj[posX][posY] = mineralObj;
+	worldObj[x][y] = mineralObj;
 }
 
 // TODO: Tree to mineral
