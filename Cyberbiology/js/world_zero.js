@@ -3,10 +3,11 @@
 const CANVAS_WIDTH = 800,
 	CANVAS_HEIGTH = 600,
 	GENOM_LENGTH = 16,
-	WORLD_X = 15,
-	WORLD_Y = 15,
+	WORLD_X = 20,
+	WORLD_Y = 20, // ! Bug: Найти баг, из-за которого падает прила при разных значениях x/y
 	MUTATION_FACTOR = 15,
-	GENS = 9; // количество разных генов
+	GENS = 9, // количество разных генов
+	STEPS = 1000;
 
 let worldTime = 0;
 
@@ -74,15 +75,15 @@ function Wall(coordX, coordY) {
 
 function create2DArray(rows = 5, columns = 5) {
 	let arr = new Array(rows);
-	for (let i = 0; i < rows; i++) {
+	for (let i = 0; i < arr.length; i++) {
 		arr[i] = new Array(columns);
 	}
 	return arr;
 }
 
 function emptySpaceGenerator(worldObj) {
-	for(let j = worldObj.length; j--;) {
-		for(let i = worldObj[j].length; i--;) {
+	for(let j = worldObj.length - 1; j--;) {
+		for(let i = worldObj[j].length - 1; i--;) {
 			worldObj[j][i] = new Space();
 		}
 	}
@@ -121,7 +122,7 @@ emptySpaceGenerator(worldMatrix);
 
 buildTheWorldWall(worldMatrix);
 
-for (let index = 20; index--;) {
+for (let index = 70; index--;) {
 	
 	let x, y;
 
@@ -249,9 +250,10 @@ function genomVM(botObject, worldObj) {
 			// Если спереди есть стена, то переходим к команде в адресе +2
 			// Если спереди не пустое пространство и не стена, то переходим к команде в адресе +3
 			// Если спереди пустое пространство, то шагаем на клетку вперед переходим к команде +4
-				if  (energy <= botSpeed) {
+				if  (energy <= (2 * botSpeed + 1)) {
 					if (direction != 0) {
 						direction = 0;
+						energy = decEnergy(energy, 1);
 						break;
 					}
 				} else {
@@ -366,7 +368,7 @@ function genomVM(botObject, worldObj) {
 		botObject.energy[0] = energy;
 	}
 	checkBotAge(botObject);
-	checkBotEnergy(botObject);
+	checkBotEnergy(botObject);  // ToDo: Добавить проерку, что бот с 0 minerals умирает
 }
 
 function jumpAdr(adr, step) {
@@ -618,7 +620,7 @@ function treeVM(treeObject, worldObj) {
 		treeGenusType = 2;
 	}
 
-	growSpeed = Math.pow(2, (2 + treeGenusType)); // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
+	growSpeed = Math.pow(2, (treeGenusType)) + 2; // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
 
 	treeEnergy = incParam(treeObject.energy, growSpeed);
 	worldObj[posX][posY].energy[0] = treeEnergy;
@@ -892,11 +894,15 @@ function botEatFrontObject(botObject, coordX, coordY, type) {
 			botPosX = botObject.posX,
 			botPosY = botObject.posY,
 			multiplier = 1,
-			oneBiteValue = 100,
+			oneBiteValue = 80,
 			temp;
 	
 			if (botHungry == 1) {
 				multiplier = 2.5;
+			}
+
+			if (type == 'mineral') {
+				oneBiteValue = 20;
 			}
 	
 			if ((objectEnergy <= multiplier * oneBiteValue) && (botEnergyDiff <= objectEnergy)) {
@@ -912,6 +918,14 @@ function botEatFrontObject(botObject, coordX, coordY, type) {
 			botEnergy += multiplier * temp;
 			objectEnergy -= multiplier * temp;
 	
+			if (type == 'mineral') {
+				oneBiteValue = 80;
+			}
+
+			if (type == 'tree' || type == 'meat') {
+				oneBiteValue = 20;
+			}
+
 			if ((objectMinerals <= multiplier * oneBiteValue) && (botMineralsDiff <= objectMinerals)) {
 				temp = botMineralsDiff;
 			} else if ((objectMinerals <= multiplier * oneBiteValue) && (botMineralsDiff > objectMinerals)) {
@@ -1042,7 +1056,7 @@ let timerId = setTimeout(function tick() {
 	render(worldMatrix);
 	timerId = setTimeout(tick, 500); // (*)
 	worldTime++;
-	if (worldTime >= 200) {
+	if (worldTime >= STEPS) {
 		clearTimeout(timerId);
 	}
 }, 500); 
