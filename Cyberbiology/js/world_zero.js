@@ -184,7 +184,7 @@ function vmsFunc(worldObj) {
 				treeVM(elem, worldObj);
 				elem.age[0] += 1;
             } else if (elem.objType == 'meat') {
-				meatVM(elem);
+				meatVM(elem, worldObj);
 				elem.age[0] += 1;
 				if (elem.age[0] >= elem.age[1]) {
 					meatToMineral(elem, worldObj);
@@ -368,7 +368,8 @@ function genomVM(botObject, worldObj) {
 		botObject.energy[0] = energy;
 	}
 	checkBotAge(botObject);
-	checkBotEnergy(botObject);  // ToDo: Добавить проерку, что бот с 0 minerals умирает
+	checkBotMainParam(botObject, 'energy');
+	checkBotMainParam(botObject, 'minerals');
 }
 
 function jumpAdr(adr, step) {
@@ -709,21 +710,22 @@ function createNewMineral(coordX, coordY, ...[energy, minerals]) {
 }
 
 // Meat VM
-function meatVM(meatObject, worldObj) {
+function meatVM(meatObject, worldObj = worldMatrix) {
 	crystalization(meatObject, worldObj);
 	if (meatObject.age[0] >= meatObject.age[1]) {
 		revertAliveFlag(meatObject);
 	}
 }
 
-function crystalization(targetObject, worldObj) {
-	if ((targetObject.energy[0] >= 4) && (targetObject.minearls[0] < targetObject.minearls[1])) {
+function crystalization(targetObject, worldObj = worldMatrix) {
+	if ((targetObject.energy[0] >= 4) && (targetObject.minerals[0] < targetObject.minerals[1])) {
 		let posX = targetObject.posX,
 		posY = targetObject.posY,
 		energy = targetObject.energy[0],
 		minerals = targetObject.minerals[0];
+
 		energy = decEnergy(energy, 4);
-		minerals += incParam(minerlal, 1);
+		minerals = incParam(targetObject.minerals, 1);
 		worldObj[posX][posY].energy[0] = energy;
 		worldObj[posX][posY].minerals[0] = minerals;	
 	}
@@ -1008,9 +1010,9 @@ function checkBotAge(botObject) {
 }
 
 // * Проверяем энергию бота
-function checkBotEnergy(botObject) {
-	let energy = botObject.energy[0];
-	if (energy <= 0) {
+function checkBotMainParam(botObject, param = 'energy') {
+	let p = botObject[param][0];
+	if (p <= 0) {
 		botToMeat(botObject);
 	}
 }
