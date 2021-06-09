@@ -55,7 +55,7 @@ function Meat(coordX, coordY) {
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [20,256];
-	this.minerals = [2048,2048];
+	this.minerals = [20,2048];
 	this.flagAlive = 1;  
 }
 
