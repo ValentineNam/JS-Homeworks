@@ -2,12 +2,9 @@
 
 const CANVAS_WIDTH = 800,
 	CANVAS_HEIGTH = 600,
-	GENOM_LENGTH = 16,
-	WORLD_X = 20,
-	WORLD_Y = 20, // ! Bug: Найти баг, из-за которого падает прила при разных значениях x/y
-	MUTATION_FACTOR = 15,
-	GENS = 9, // количество разных генов
-	STEPS = 1000;
+	GENOM_LENGTH = 32,
+	WORLD_X = 7,
+	WORLD_Y = 7;
 
 let worldTime = 0;
 
@@ -16,7 +13,7 @@ function Bot(coordX, coordY) {
 		this.age = [0,1024];
 		this.posX = coordX;
 		this.posY = coordY;
-		this.direction = 1;
+		this.direction = 7;
 		this.flagAttacked = 0;
 		this.flagSleeping = 0;
 		this.flagHungry = 0;
@@ -25,12 +22,15 @@ function Bot(coordX, coordY) {
 		this.energy = [512,1024];
 		this.minerals = [8,256];
 		this.speed = 100;
-		this.genom = [];
+		this.genom = [];//[0,1,2,3,4,5]
+		this.genom = [ 5, 5, 5, 5, 5, 5,
+			5, 5, 5, 5, 5, 5,
+			5, 5, 5, 5];//[0,1,2,3,4,5]
 }
 
 function Space() {
 	this.objType = 'space';
-	this.energy = [271,8192];
+	this.energy = [200,8192];
 	// TODO: добавить рассеивание энергии в пространстве, поглошение ее деревьями
 	// TODO: и превращение минералов в энергию после "смерти". Также, добавить
 	// TODO: прямое получение энергии пространства из клетки пустого пространства
@@ -45,17 +45,16 @@ function Tree(coordX, coordY) {
 	this.posY = coordY;
 	this.energy = [300,2048];
 	this.minerals = [200,2048];
-	this.flagAlive = 1;
-	this.genus = 'tree';
+	this.flagAlive = 1;  
 }
 
 function Meat(coordX, coordY) {
 	this.objType = 'meat';
-	this.age = [0,64];
+	this.age = [0,128];
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [20,256];
-	this.minerals = [20,2048];
+	this.minerals = [2048,2048];
 	this.flagAlive = 1;  
 }
 
@@ -65,7 +64,7 @@ function Mineral(coordX, coordY) {
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [20,256];
-	this.minerals = [2048,4096];
+	this.minerals = [6,4096];
 	this.flagAlive = 1;  
 }
 
@@ -75,22 +74,22 @@ function Wall(coordX, coordY) {
 
 function create2DArray(rows = 5, columns = 5) {
 	let arr = new Array(rows);
-	for (let i = 0; i < arr.length; i++) {
+	for (let i = 0; i < rows; i++) {
 		arr[i] = new Array(columns);
 	}
 	return arr;
 }
 
 function emptySpaceGenerator(worldObj) {
-	for(let j = worldObj.length - 1; j--;) {
-		for(let i = worldObj[j].length - 1; i--;) {
+	for(let j = worldObj.length; j--;) {
+		for(let i = worldObj[j].length; i--;) {
 			worldObj[j][i] = new Space();
 		}
 	}
 }
 
-// * возвращает геном (массив длиной 16 из случайных чисел от 0 до 9)
-function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = GENS) {
+// * возвращает геном (массив длиной 16 из случайных чисел от 0 до 5)
+function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = 10) {
 	let GENOM = [];
 	for (let x = genomLength; x--;) {
 		GENOM.push(getRandomInt(genomLowAdr, genomHighAdr));
@@ -112,9 +111,12 @@ function powerOfTwo(x) {
 	let pow = 1;
 	for (;2 <= x / 2; pow++) {
 		x /= 2;
+		// console.log(`x = ${x}`);
 	}
 	return pow;
 }
+
+// console.log(`1024 is 2^${powerOfTwo(1024)}`);
 
 let worldMatrix = create2DArray(WORLD_X, WORLD_Y);
 
@@ -122,95 +124,76 @@ emptySpaceGenerator(worldMatrix);
 
 buildTheWorldWall(worldMatrix);
 
-for (let index = 70; index--;) {
-	
-	let x, y;
+// worldMatrix[1][3] = new Bot(1, 3);
 
-	x = getRandomInt(1, WORLD_X - 1);
-	y = getRandomInt(1, WORLD_Y - 1);
+// worldMatrix[1][3]['genom'] = randomGenomGenerator();
 
-	while (worldMatrix[x][y].objType != 'space') {
-		x = getRandomInt(1, WORLD_X - 1);
-		y = getRandomInt(1, WORLD_Y - 1);
-	}
+worldMatrix[4][3] = new Bot(4, 3);
 
-	createNewBot(x, y, 'randomGenom');
-	
-}
+// worldMatrix[4][4]['genom'] = randomGenomGenerator(GENOM_LENGTH);
 
+worldMatrix[2][3] = new Tree(2, 3);
 
-for (let index = 5; index--;) {
-	
-	let x, y, m, e;
+worldMatrix[3][3] = new Mineral(3, 3);
 
-	x = getRandomInt(1, WORLD_X - 1);
-	y = getRandomInt(1, WORLD_Y - 1);
+// console.log(`Объект в клетке 2-2: ${worldMatrix[2][2]['objType']} ${worldMatrix[2][2]['posX']}:${worldMatrix[2][2]['posY']} до перемещения`);
 
-	while (worldMatrix[x][y].objType != 'space') {
-		x = getRandomInt(1, WORLD_X - 1);
-		y = getRandomInt(1, WORLD_Y - 1);
-	}
-	e = getRandomInt(32, 128);
-	m = getRandomInt(128, 512);
-	createNewMineral(x, y, e, m);
-	
-}
+// worldMatrix[3][2] = new Space();
+botMove(2, 2, 4, 1);
 
-createNewTree(7, 7);
-createNewTree(4, 4, 'grass');
-createNewTree(9, 9, 'bush');
+// console.log(`Объект в клетке 2-2: ${worldMatrix[2][2]['objType']} после перемещения`);
 
-createNewMineral(7, 5);
+// console.log(`Объект в клетке 1-1: ${worldMatrix[1][1]['objType']} ${worldMatrix[1][1]['posX']}:${worldMatrix[1][1]['posY']}`);
+
+// console.log(`Объект в клетке 4-1: ${worldMatrix[4][1].objType}`);
+// console.log(`${worldMatrix[4][1].genom}`);
+
+// main(worldMatrix);
 
 function main(worldObj) {
 	clearMoveParams(worldObj);
 	vmsFunc(worldObj);
 }
 
-// * основная функция, которая обходит двумерный мировой массив и запускает другие функции, в зависимости от объекта на карте
 function vmsFunc(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
-            if (elem.objType == 'bot') {
-                if (elem.flagMoved == 0) {
-					genomVM(elem, worldObj);
-					if (botCanMakeChild(elem)) {
-						botCreateChild(elem, worldObj)
-					}
-				}
+			if (elem.objType == 'bot') {
+				console.log(`x: ${elem.posX}, y: ${elem.posY}`);
+				console.log(`${elem.genom}`);
 				elem.age[0] += 1;
+				if (elem.flagMoved == 0) { genomVM(elem, worldObj); console.log(`Moved : ${elem.flagMoved}`);}
+				if (elem.flagAlive == 0) {botToMeat(elem)};
             } else if (elem.objType == 'tree') {
+				// console.log(`x: ${elem.posX}, y: ${elem.posY}`);
+				// console.log(`This tree has age is ${elem.age[0]}`);
+				elem.age[0] += 1;
 				treeVM(elem, worldObj);
-				elem.age[0] += 1;
-            } else if (elem.objType == 'meat') {
-				meatVM(elem, worldObj);
-				elem.age[0] += 1;
-				if (elem.age[0] >= elem.age[1]) {
-					meatToMineral(elem, worldObj);
-				}
             } else if (elem.objType == 'mineral') {
-				mineralsVM(elem);
 				elem.age[0] += 1;
+				// console.log(`x: ${elem.posX}, y: ${elem.posY}`);
+				// console.log(`This is a mineral with strength ${elem.minerals[0]}`);
             } else if (elem.objType == 'space') {
+				// console.log(`x: ${j}, y: ${i} is empty`);
             }
 		}
 	}
 }
 
-// * функция, которая в конце хода переводит флаги движения всех ботов в состояние 0
 function clearMoveParams(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
-            if (elem.objType == 'bot') {
-                elem.flagMoved = 0;
-            }
+			if (elem.objType == 'bot') {
+				// console.log(`x: ${elem.posX}, y: ${elem.posY}`);
+				// console.log(`${elem.genom}`);
+				elem.flagMoved = 0;
+			}
 		}
 	}
 }
 
-// * функция обработки генома бота
 function genomVM(botObject, worldObj) {
 	let breakFlag = 0,
 	actCounter = 16,
@@ -224,79 +207,109 @@ function genomVM(botObject, worldObj) {
 	botMoved = botObject.flagMoved,
 	botSpeed;
 
+	console.log(`bot object's energy is ${botObject.energy[0]}`);
+	console.log("For loop start");
 	for (;((breakFlag == 0) && (actCounter >= 0) && (botMoved != 1));) {
 		energy = botObject.energy[0];
+		console.log(`energy is: ${energy}`);
+		console.log(`minerals is: ${botObject.minerals[0]}`);
 		botSpeed = setSpeed(botObject);
+		console.log(`Action counter: ${actCounter}`);
+		console.log(`BreakFlag : ${breakFlag}`);
 		let frontCoordinates = getFrontCellCoordinates(direction, posX, posY);
+		// console.log(`case 1`);
+		// console.log(`front coords: ${frontCoordinates}`);
 		let frontObjectType;
 		let frontX;
 		let frontY;
 		if (frontCoordinates != -1) {
 			frontX = frontCoordinates[0];
 			frontY = frontCoordinates[1];
-			frontObjectType = worldObj[frontX][frontY].objType;		
+			frontObjectType = worldObj[frontX][frontY].objType;
+			// console.log(`if working`);
+		console.log(`front object at coords [${frontX},${frontY}] is ${worldObj[frontX][frontY].objType}`);				
 		}
-
 		switch (botGenom[adr]) {
 			case 0: // Mutate random gen
+				// console.log(`case 0`);
 				adr = incAdr(adr);
-				energy = decEnergy(energy, 1);
 				genomMutate(botGenom);
 				actCounter--;
+				// console.log("Mutate and Go To: " + adr);
+				console.log(botGenom);
 				break;
 			case 1: // Move front
-			// Понять, что за объект в координатах спереди (по линии взгляда)
+			// Понять, что за координаты спереди (по линии взгляда)
 			// Если не смотрит никуда (спит), то переходим к команде в адресе +1
 			// Если спереди есть стена, то переходим к команде в адресе +2
 			// Если спереди не пустое пространство и не стена, то переходим к команде в адресе +3
 			// Если спереди пустое пространство, то шагаем на клетку вперед переходим к команде +4
-				if  (energy <= (2 * botSpeed + 1)) {
-					if (direction != 0) {
-						direction = 0;
-						energy = decEnergy(energy, 1);
-						break;
-					}
-				} else {
-					if (frontObjectType == 'wall') {
-						adr = jumpAdr(adr, 2);
-						energy = decEnergy(energy, 1);
-					} else if ((frontObjectType == 'bot') || (frontObjectType == 'tree') || (frontObjectType == 'mineral')) {
-						adr = jumpAdr(adr, 3);
-						energy = decEnergy(energy, 1);
-					} else if (frontObjectType == 'space') {
-						botMove(posX, posY, frontX, frontY);
-						adr = jumpAdr(adr, 4);
-						breakFlag = 1; // Перемещение это прерывающая активность операция 
-						botObject.flagMoved = 1;
-						energy = decEnergy(energy, botSpeed); //при перемещении уменьшаем энергию на величину botSpeed
-					} else if (direction == 0) {
+				console.log(`direction is ${direction}`);
+				if  (energy > botSpeed) {
+					console.log(`if energy > bot speed: true`);
+					if (direction == 0) {
 						adr = incAdr(adr);
 						energy = decEnergy(energy, 1); //спим - тратим 1 ед энергии
-					}
+						console.log(`case 1 go if 1`);
+					} else {
+						if (frontObjectType == 'wall') {
+							adr = jumpAdr(adr, 2);
+							console.log(`case 1 go if 2`);
+							energy = decEnergy(energy, 1);
+						} else if ((frontObjectType == 'bot') || (frontObjectType == 'tree') || (frontObjectType == 'mineral')) {
+							adr = jumpAdr(adr, 3);
+							console.log(`case 1 go if 3`);
+							energy = decEnergy(energy, 1);
+						} else if (frontObjectType == 'space') {
+							console.log(`bot see in direction ${direction}`);
+							console.log(`bot move to the front coords ${frontX},${frontY}`);
+							botMove(posX, posY, frontX, frontY);
+							adr = jumpAdr(adr, 4);
+							console.log(`case 1 go if 4`);
+							breakFlag = 1; // Перемещение это прерывающая активность операция 
+							botObject.flagMoved = 1;
+							console.log(`break from case 1 4 is: ${breakFlag}`);
+							console.log(`moved from case 1 4 is: ${botObject.flagMoved}`);
+							energy = decEnergy(energy, botSpeed); //при перемещении уменьшаем энергию на величину botSpeed
+						};
+					};
+				} else {
+					breakFlag = 1;
+					console.log(`bot speed is: ${botSpeed}`);
+					console.log(`if energy > bot speed: false`);
+					break;
 				}
-				breakFlag = 1;
+				console.log(botGenom);
+				// breakFlag++;
+				actCounter--;
+				console.log("1 Go To adr: " + adr);
 				break;
 			case 2: // Bot change direction right
+				console.log(`case 2`);
 				adr = incAdr(adr);
-				direction = botChangeDirection(direction, 'right');
+				direction = botObject.direction = botChangeDirection(direction, 'rigth');
 				energy = decEnergy(energy, Math.ceil(botSpeed/8));
+				console.log(`new direction is ${botObject.direction}`);
+				// console.log(`world object direction is ${worldObj[posX][posY].direction}`);
+				// console.log(`direction is ${direction}`);
 				actCounter--;
+				console.log("2 Go To adr: " + adr);
 				break;
 			case 3: // Bot change direction left
+				console.log(`case 3`);
 				adr = incAdr(adr);
-				direction = botChangeDirection(direction, 'left');
+				direction = botObject.direction = botChangeDirection(direction, 'left');
 				energy = decEnergy(energy, Math.ceil(botSpeed/8));
+				console.log(`new direction is ${botObject.direction}`);
+				// console.log(`world object direction is ${worldObj[posX][posY].direction}`);
+				// console.log(`direction is ${direction}`);
 				actCounter--;
+				console.log("3 Go To adr: " + adr);
 				break;
-			case 4: // Bot change direction to random
-				adr = incAdr(adr);
-				direction = botChangeDirection();
-				energy = decEnergy(energy, Math.ceil(botSpeed/8));
-				actCounter--;
-				break;
-			case 5: // Bot checks his energy lvl
+			case 4: // Bot checks his energy lvl
 			// Если энергия от 0 до 9% то переходим к команде в адресе +1, 10-59% => +2, 60-99% => +3, 100% => +4
-				let eLvl = checkOwnParamLvl(botObject);
+				console.log(`case 4`);
+				let eLvl = checkOwnEnergy(botObject);
 				if (eLvl = 0) {
 					adr = incAdr(adr);
 				} else if ((eLvl >= 1) && (eLvl <= 5)) {
@@ -308,35 +321,32 @@ function genomVM(botObject, worldObj) {
 				}
 				energy = decEnergy(energy, 1);
 				actCounter--;
-				break;
-			case 6: // Bot eat tree from front cell
-				if (frontObjectType == 'tree') {
-					energy = botEatFrontObject(botObject, frontX, frontY, 'tree');
-					energy = decEnergy(energy, 1);
-					breakFlag = 1;
-				}
-				adr = incAdr(adr);
-				actCounter--;
-				break;
-			case 7: // Bot eat tree from front cell
-			if (frontObjectType == 'meat') {
-				energy = botEatFrontObject(botObject, frontX, frontY, 'meat');
-				energy = decEnergy(energy, 1);
-				breakFlag = 1;
-			}
-			adr = incAdr(adr);
-			actCounter--;
-			break;
-			case 8: // Bot eat tree from front cell
-				if (frontObjectType == 'mineral') {
-					energy = botEatFrontObject(botObject, frontX, frontY, 'mineral');
-					energy = decEnergy(energy, 1);
-					breakFlag = 1;
-				}
-				adr = incAdr(adr);
-				actCounter--;
+				console.log("4 Go To adr: " + adr);
 				break;
 			case 6:
+				console.log(`case 6`);
+				if (frontObjectType == 'tree') {
+					energy = botEatTree(botObject, frontX, frontY);
+					energy = decEnergy(energy, 1);
+					breakFlag = 1;
+				}
+				adr = incAdr(adr);
+				actCounter--;
+				console.log("5 Go To adr: " + adr);
+				break;
+			// case 6:
+			// 	console.log(`case 6`);
+			// 	if (frontObjectType == 'tree') {
+			// 		energy = botEatTree(botObject, frontX, frontY);
+			// 		energy = decEnergy(energy, 1);
+			// 		breakFlag = 1;
+			// 	}
+			// 	adr = incAdr(adr);
+			// 	actCounter--;
+			// 	console.log("6 Go To adr: " + adr);
+			// 	break;
+			case 5:
+				console.log(`case 5`);
 				if (frontObjectType == 'mineral') {
 					botEatMineral(botObject, frontX, frontY);
 					energy = decEnergy(energy, 1);
@@ -344,19 +354,23 @@ function genomVM(botObject, worldObj) {
 				}
 				adr = incAdr(adr);
 				actCounter--;
+				console.log("6 Go To adr: " + adr);
 				break;
 			default:
-				adr = 0;
-				breakFlag = 1;
+				console.log(`default`);
+				adr = incAdr(adr);
+				// console.log("Bad jump. Go To adr: " + adr);
+				// breakFlag = 1;
 				break;
 		}
-
-		botObject.direction = direction;
 		botObject.energy[0] = energy;
+		console.log(`bot's energy now is: ${botObject.energy[0]} of ${botObject.energy[1]}`);
+		if (botObject.energy[0] == 0) {
+			revertAliveFlag(botObject);
+			console.log(`bot alive flag is: ${botObject.flagAlive}`);
+		}
 	}
 	checkBotAge(botObject);
-	checkBotMainParam(botObject, 'energy');
-	checkBotMainParam(botObject, 'minerals');
 }
 
 function jumpAdr(adr, step) {
@@ -371,14 +385,14 @@ function incAdr(adr) {
 	return adr;
 }
 
-function incParam(paramsArray, increment) {
-	(paramsArray[0] + increment <= paramsArray[1]) ?
-	(paramsArray[0] += increment) :
-	(paramsArray[0] = paramsArray[1]);
-	if (paramsArray[0] + increment <= 0) {
-		paramsArray[0] = 0;
+function incEnergy(energy, increment, maxEnergy = 1024) {
+	(energy + increment <= maxEnergy) ?
+	(energy += increment) :
+	(energy = maxEnergy);
+	if (energy + increment <= 0) {
+		energy = 0;
 	} 
-	return paramsArray[0];
+	return energy;
 }
 
 function decEnergy(energy, increment) {
@@ -402,24 +416,27 @@ function genomRecombinate(botGenom) {
 	let pos2, temp;
 	pos2 = getRandomInt(0, botGenom.length - 1);
 	while (pos2 == pos1) {
+		// console.log(`pos1 == pos2: ${pos1} == ${pos2}`);
 		pos2 = getRandomInt(0, botGenom.length - 1);
 	}
 	temp = botGenom[pos1] ;
 	botGenom[pos1] = botGenom[pos2];
 	botGenom[pos2] = temp;
+	console.log(`Swap gens in positions: ${pos1}, ${pos2}`);
+	console.log(`Genom recombinated`);
 	return botGenom;
 }
 
 function botMove(coordX, coordY, newX, newY) {
-    if ((worldMatrix[coordX][coordY].objType == 'bot') && (worldMatrix[newX][newY].objType == 'space')) {
-        let temp = worldMatrix[coordX][coordY];
-        temp['posX'] = newX;
-        temp['posY'] = newY;
-        worldMatrix[newX][newY] = temp;
-        worldMatrix[coordX][coordY] = new Space();
-    } else {
-        return false;
-    }
+	if ((worldMatrix[coordX][coordY].objType == 'bot') && (worldMatrix[newX][newY].objType == 'space')) {
+		let temp = worldMatrix[coordX][coordY];
+		temp['posX'] = newX;
+		temp['posY'] = newY;
+		worldMatrix[newX][newY] = temp;
+		worldMatrix[coordX][coordY] = new Space();
+	} else {
+		return false;
+	}
 }
 
 // * Вычисление координат клетки в направлении взгляда бота
@@ -494,7 +511,7 @@ function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 	return coordsXY; //[x,y] || -1
 }
 
-function botChangeDirection(...[direction, spin]) {
+function botChangeDirection(direction, spin) {
 	if (direction != 0) {
 		switch (spin) {
 			case 'left':
@@ -504,7 +521,7 @@ function botChangeDirection(...[direction, spin]) {
 					direction = 8;
 				}
 				break;
-			case 'right':
+			case 'rigth':
 				if (direction != 8) {
 					direction++;
 				} else {
@@ -512,17 +529,16 @@ function botChangeDirection(...[direction, spin]) {
 				}
 				break;
 			default:
-				direction = getRandomInt(1, 8);
+				break;
 		}
-	} else {
-		direction = getRandomInt(1, 8);
 	}
 	return direction;
 }
 
-// * Функция проверки объекта в указанных координатах
+// TODO: функция проверки объекта в указанных координатах
 function botCheckDirection(botGenom, worldArray, coordX, coordY) { // * получаем координаты, возвращаем ответ 
 	// * если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
+	// TODO: дописать передачу координат и определение типа объекта
 	let objType = worldArray[coordX][coordY].objType;
 	let x;
 	switch (objType) {
@@ -532,6 +548,13 @@ function botCheckDirection(botGenom, worldArray, coordX, coordY) { // * полу
 		case 'bot':
 			let frontBotGenom = worldArray[coordX][coordY].genom;
 			isRelative(botGenom, frontBotGenom) == 1 ? x = 1 : x = 2;
+			// console.log(`is relative ${isRelative(botGenom, frontBotGenom)}`);
+		// case 'relative':
+		// 	x = 1;
+		// 	break;
+		// case 'stranger':
+		// 	x = 2;
+		// 	break;
 		case 'tree':
 			x = 3;
 			break;
@@ -582,99 +605,42 @@ function buildTheWorldWall(arr) {
 	}
 }
 
-// * Tree VM
+// TODO: Tree VM
 //дерево  приращивает каждый ход энергию и минералы, по достижению определенного возраста умирает
 //и оставляет всю накопленную энергию в минерале, которая "остывая" превращается в минеральную составляющую
 //дерева energy -> minerals
 //Если у дерева возраст > определенного значения и достаточно энергии и минералов, создает еще одно дерево
 //в определенном радиусе
-function treeVM(treeObject, worldObj) {
-	let posX = treeObject.posX,
-	posY = treeObject.posY,
-	treeEnergy = treeObject.energy[0],
-	maxEnergy = treeObject.energy[1],
-	treeMinerals = treeObject.minerals[0],
-	maxMinerals = treeObject.minerals[1],
+function treeVM(treeObj, worldObj) {
+	let energy,
+	maxEnergy,
 	energyLvl,
+	energyInc,
+	minerals,
+	maxMinerals,
+	mineralsInc,
 	mineralsLvl,
-	// ageLvl,
-	age,
-	treeGenusType = 3,
-	growSpeed = 1; // 1 - grass, 2 - bush, 3 - tree
+	posX = treeObj.posX,
+	posY = treeObj.posY;
 
-	if (treeObject.genus == 'grass') {
-		treeGenusType = 1;
-	} else if (treeObject.genus == 'bush') {
-		treeGenusType = 2;
+	energy = treeObj.energy[0];
+	maxEnergy = treeObj.energy[1];
+	minerals = treeObj.minerals[0];
+	maxMinerals = treeObj.minerals[1];
+
+	energyLvl = checkOwnEnergy(treeObj);
+	mineralsLvl = checkOwnMinerals(treeObj);
+
+	if (energyLvl >= 4) && (energyLvl <= 7) && (minerals >= ) && () {
+
 	}
 
-	growSpeed = Math.pow(2, (treeGenusType)) + 2; // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
+	energy = incEnergy(energy, energyInc, maxEnergy);
+	minerals = incMinerals(minerals, mineralsInc, maxMinerals);
+	console.log(`energy is: ${energy}`);
+	console.log(`minerals is: ${minerals}`);
 
-	treeEnergy = incParam(treeObject.energy, growSpeed);
-	worldObj[posX][posY].energy[0] = treeEnergy;
-	treeMinerals = incParam(treeObject.minerals, growSpeed);
-	worldObj[posX][posY].minerals[0] = treeMinerals;
-	
-	energyLvl = checkOwnParamLvl(treeObject);
-	mineralsLvl = checkOwnParamLvl(treeObject, 'minerals');
-	age = treeObject.age[0];
-
-	if ((energyLvl >= 7) && (mineralsLvl >= 7) && (age >= 40)) {
-		treeMakeChild(treeObject, treeGenusType, worldObj)
-	}
-}
-
-// * Функция создания нового дерева в определенных координатах
-function createNewTree(coordX, coordY, genusType = 'tree') {
-	let newTree = new Tree(coordX, coordY);
-	if ((genusType == 'grass') || (genusType == 'bush')) {
-		newTree.genus = genusType;
-		if (genusType == 'grass') {
-			newTree.energy[1] = 256;
-			newTree.minerals[1] = 256;
-			newTree.age[1] = 256;
-		} else {
-			newTree.energy[1] = 1024;
-			newTree.minerals[1] = 1024;
-			newTree.age[1] = 1024;
-		}
-	}
-	worldMatrix[coordX][coordY] = newTree;
-}
-
-function treeMakeChild(treeObject, treeGenusType, worldObj) {
-	let parentX = treeObject.posX,
-	parentY = treeObject.posY,
-	newTreeX,
-	newTreeY;
-
-	for (let index = 15; index--; ) {
-		let difX = getRandomInt(-treeGenusType, treeGenusType),
-		difY = getRandomInt(-treeGenusType, treeGenusType);
-		
-		while ((difX == 0) && (difY == 0)) {
-			difX = getRandomInt(-treeGenusType, treeGenusType),
-			difY = getRandomInt(-treeGenusType, treeGenusType);
-		}
-	
-		newTreeX = parentX + difX;
-		newTreeY = parentY + difY;
-	
-		if ((newTreeX > 0 && newTreeX < WORLD_X) && (newTreeY > 0 && newTreeY < WORLD_Y)) {
-			if (worldObj[newTreeX][newTreeY].objType == 'space') {
-				let temp = Math.round(worldObj[parentX][parentY].energy[0] / 2);
-				createNewTree(newTreeX, newTreeY, treeGenusType);
-				worldObj[newTreeX][newTreeY].energy[0] = temp;
-				worldObj[parentX][parentY].energy[0] = worldObj[parentX][parentY].energy[0] - temp;
-				temp = Math.round(worldObj[parentX][parentY].minerals[0] / 2);
-				worldObj[newTreeX][newTreeY].minerals[0] = temp;
-				worldObj[parentX][parentY].minerals[0] = worldObj[parentX][parentY].minerals[0] - temp;
-				index = 0;
-			} else {
-				continue;
-			}		
-		}
-	}
+	return false;
 }
 
 // TODO: Minerals VM
@@ -682,115 +648,22 @@ function mineralsVM(params) {
 	return false;
 }
 
-function createNewMineral(coordX, coordY, ...[energy, minerals]) {
-	let newMineral = new Mineral(coordX, coordY);
-
-	if (energy != undefined) {
-		newMineral.energy[0] = energy;
-	}
-
-	if (minerals != undefined) {
-		newMineral.minerals[0] = minerals;
-	}
-
-	worldMatrix[coordX][coordY] = newMineral;
+// TODO: Meat VM
+function meatVM(params) {
 }
 
-// Meat VM
-function meatVM(meatObject, worldObj = worldMatrix) {
-	crystalization(meatObject, worldObj);
-	if (meatObject.age[0] >= meatObject.age[1]) {
-		revertAliveFlag(meatObject);
-	}
+// TODO: Create new bot
+function createBot(params) {
+	return false;
 }
 
-function crystalization(targetObject, worldObj = worldMatrix) {
-	if ((targetObject.energy[0] >= 4) && (targetObject.minerals[0] < targetObject.minerals[1])) {
-		let posX = targetObject.posX,
-		posY = targetObject.posY,
-		energy = targetObject.energy[0],
-		minerals = targetObject.minerals[0];
-
-		energy = decEnergy(energy, 4);
-		minerals = incParam(targetObject.minerals, 1);
-		worldObj[posX][posY].energy[0] = energy;
-		worldObj[posX][posY].minerals[0] = minerals;	
-	}
-}
-
-// * Функция создания бота в определенных координатах
-function createNewBot(coordX, coordY, ...[mode, parentGenom]) {
-	let newBot = new Bot(coordX, coordY),
-	mutationChance,
-	genom = newBot['genom'];
-
-	if (mode == 'randomGenom') {
-		genom = randomGenomGenerator();
-	} else if (mode == 'parentGenom') {
-		genom = parentGenom;
-	}
-
-	mutationChance = getRandomInt(0, 100);
-	if (mutationChance <= MUTATION_FACTOR) {
-		genom = genomMutate(genom);
-	}
-
-	newBot['genom'] = genom;
-	worldMatrix[coordX][coordY] = newBot;
-}
-
-// * Проверка - не пора ли родить нового бота?
-function botCanMakeChild(botObject) {
-	let ageLvl = checkOwnParamLvl(botObject, 'age'),
-	energyLvl = checkOwnParamLvl(botObject);
-
-	if (energyLvl >= 7 && ageLvl >=0) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-// * Бот создает нового бота
-function botCreateChild(botObject, worldObj) {
-	let parentX = botObject.posX,
-	parentY = botObject.posY,
-	newBotX,
-	newBotY;
-
-	for (let index = 15; index--; ) {
-		let difX = getRandomInt(-1, 1),
-		difY = getRandomInt(-1, 1);
-		
-		while ((difX == 0) && (difY == 0)) {
-			difX = getRandomInt(-1, 1),
-			difY = getRandomInt(-1, 1);
-		}
-	
-		newBotX = parentX + difX;
-		newBotY = parentY + difY;
-	
-		if ((newBotX > 0 && newBotX < WORLD_X) && (newBotY > 0 && newBotY < WORLD_Y)) {
-			if (worldObj[newBotX][newBotY].objType == 'space') {
-				let temp = Math.round(worldObj[parentX][parentY].energy[0] / 2);
-				let parentGenom = worldObj[parentX][parentY].genom;
-				createNewBot(newBotX, newBotY, 'parentGenom', parentGenom);
-				worldObj[newBotX][newBotY].energy[0] = temp;
-				worldObj[parentX][parentY].energy[0] = worldObj[parentX][parentY].energy[0] - temp;
-				temp = Math.round(worldObj[parentX][parentY].minerals[0] / 2);
-				worldObj[newBotX][newBotY].minerals[0] = temp;
-				worldObj[parentX][parentY].minerals[0] = worldObj[parentX][parentY].minerals[0] - temp;
-				index = 0;
-			} else {
-				continue;
-			}		
-		}
-	}
+// TODO: Create new child
+function createChild(params) {
+	return false;
 }
 
 // TODO: Check flags
-// ToDo: Передаем объект и флаг, проверяем значение для поля "флаг" и если 1 - возвращаем true иначе false
-function checkFlags(targetObject, targetFlag) {
+function checkFlags(params) {
 	return false;
 }
 
@@ -805,17 +678,22 @@ function revertAliveFlag(targetObject) {
 	return false;
 }
 
-// TODO: Bot give resources in some direction
+// TODO: Give resources in some direction
 function giveResources(params) {
 	return false;
 }
 
-// * Бот нападает на другого бота в определенном направлении
-function botAttackBot(botObject, coordX, coordY) {
-	if (worldMatrix[coordX][coordY].objType == 'bot') {
-		let defBot = worldMatrix[coordX][coordY],
-		defEnergy = defBot.energy[0],
-		defMinerals = defBot.minerals[0],
+// TODO: Attack another bot in some direction
+function botAttack(params) {
+	return false;
+}
+
+// TODO: Eat tree
+function botEatTree(botObject, coordX, coordY) {
+	if (worldMatrix[coordX][coordY].objType == 'tree') {
+		let treeObj = worldMatrix[coordX][coordY],
+		treeEnergy = treeObj.energy[0],
+		treeMinerals = treeObj.minerals[0],
 		botHungry = botObject.flagHungry,
 		botEnergy = botObject.energy[0],
 		botMinerals = botObject.minerals[0],
@@ -827,11 +705,15 @@ function botAttackBot(botObject, coordX, coordY) {
 		oneBiteValue = 80,
 		temp = 0;
 
+		console.log(`At coords ${coordX},${coordY} is ${worldMatrix[coordX][coordY].objType}`);
+		console.log(`tree energy is ${treeEnergy}`);
+		console.log(`tree minerals is ${treeMinerals}`);
+
 		if (botHungry == 1) {
 			multiplier = 2.5;
 		}
 
-		if ((defEnergy <= multiplier * oneBiteValue) && (botEnergyDiff <= defEnergy)) {
+		if ((treeEnergy <= multiplier * oneBiteValue) && (botEnergyDiff <= treeEnergy)) {
 			temp = botEnergyDiff;
 		} else if ((treeEnergy <= multiplier * oneBiteValue) && (botEnergyDiff > treeEnergy)) {
 			temp = treeEnergy;
@@ -842,7 +724,10 @@ function botAttackBot(botObject, coordX, coordY) {
 		}
 
 		botEnergy += multiplier * temp;
-		defEnergy -= multiplier * temp;
+		console.log(`bot Energy now should be ${botEnergy}`);
+		treeEnergy -= multiplier * temp;
+
+		console.log(`bot eat ${multiplier * temp} energy`);
 
 		if ((treeMinerals <= multiplier * oneBiteValue / 4) && (botMineralsDiff <= treeMinerals)) {
 			temp = botMineralsDiff;
@@ -855,40 +740,22 @@ function botAttackBot(botObject, coordX, coordY) {
 		}
 
 		botMinerals += multiplier * temp;
+		console.log(`bot Minerals now should be ${botMinerals}`);
 		treeMinerals -= multiplier * temp;
+
+		console.log(`bot eat ${multiplier * temp} minerals`);
 
 		worldMatrix[coordX][coordY].energy[0] = treeEnergy;
 		worldMatrix[coordX][coordY].minerals[0] = treeMinerals;
 		worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
-
-		if (defBot.energy[0] <= 0) {
-			botToMeat(defBot);
-		}
 		return botEnergy; 
 	}
 }
 
-// * Eat tree/meat/mineral 
-function botEatFrontObject(botObject, coordX, coordY, type) {
-	if (type == 'tree' || 'meat' || 'mineral') {
-		if (worldMatrix[coordX][coordY].objType == type) {
-			let targetObj = worldMatrix[coordX][coordY],
-			objectEnergy = targetObj.energy[0],
-			objectMinerals = targetObj.minerals[0],
-			botHungry = botObject.flagHungry,
-			botEnergy = botObject.energy[0],
-			botMinerals = botObject.minerals[0],
-			botEnergyDiff = botObject.energy[1] - botObject.energy[0],
-			botMineralsDiff = botObject.energy[1] - botObject.energy[0],
-			botPosX = botObject.posX,
-			botPosY = botObject.posY,
-			multiplier = 1,
-			oneBiteValue = 80,
-			temp;
-	
-			if (botHungry == 1) {
-				multiplier = 2.5;
-			}
+// TODO: Bot eat meat
+function botEatMeat(params) {
+	return false;
+}
 
 // TODO: Bot eat mineral
 function botEatMineral(botObject, coordX, coordY) {
@@ -904,65 +771,72 @@ function botEatMineral(botObject, coordX, coordY) {
 		oneBiteValue = 20,
 		temp = 0;
 
+		console.log(`At coords ${coordX},${coordY} is ${worldMatrix[coordX][coordY].objType}`);
+		console.log(`minerals is ${minerals}`);
+
 		if (botHungry == 1) {
 			multiplier = 2.5;
 		}
 
 		if ((minerals <= multiplier * oneBiteValue) && (botMineralsDiff <= minerals)) {
 			temp = botMineralsDiff;
+			console.log(`1`);
 		} else if ((minerals <= multiplier * oneBiteValue) && (botMineralsDiff > minerals)) {
 			temp = minerals;
+			console.log(`2`);
 		} else if ((minerals > multiplier * oneBiteValue) && (botMineralsDiff <= multiplier * oneBiteValue)) {
 			temp = botMineralsDiff;
+			console.log(`3`); 
 		} else if ((minerals > multiplier * oneBiteValue) && (botMineralsDiff > multiplier * oneBiteValue)) {
 			temp = multiplier * oneBiteValue;
+			console.log(`4`);
 		}
 
 		botMinerals += multiplier * temp;
+		console.log(`bot Minerals now should be ${botMinerals}`);
 		minerals -= multiplier * temp;
+
+		console.log(`bot eat ${multiplier * temp} minerals`);
 
 		worldMatrix[coordX][coordY].minerals[0] = minerals;
 		worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
+		// return botEnergy; 
 	}
 }
+
 
 // * Бот проверяет свой уровень энергии
-function checkOwnParamLvl(botObject, paramType = 'energy') {
-	if (botObject[paramType] != undefined) {
-		let param = botObject[paramType][0],
-		maxParam = botObject[paramType][1],
-		paramLvl = Math.floor(param / maxParam * 10);
-		return paramLvl; // возвращаем уровень от 0 - 10
-	} else {
-		return false;
-	}
+function checkOwnEnergy(object) {
+	let energy = object.energy[0],
+	maxEnergy = object.energy[1],
+	energyLvl = Math.floor(energy / maxEnergy * 10);
+	return energyLvl; // возвращаем уровень от 0 - 10
 }
 
-// * Bot to meat
+// * Бот проверяет свой уровень минералов
+function checkOwnMinerals(object) {
+	let minerals = object.minerals[0],
+	maxMinerals = object.minerals[1],
+	mineralsLvl = Math.floor(minerals / maxMinerals * 10);
+	return mineralsLvl; // возвращаем уровень от 0 - 10
+}
+
+// TODO: Bot to meat
 function botToMeat(botObject) {
 	let x = botObject.posX,
 	y = botObject.posY,
 	energy = botObject.energy[0],
 	minerals = botObject.minerals[0],
-	meat = new Meat(x, y);
+	meat = new Meat();
 
 	meat.energy[0] = energy;
 	meat.minerals[0] = minerals;
 	worldMatrix[x][y] = meat;
 }
 
-// * Meat to mineral
-function meatToMineral(meatObject, worldObj) {
-	let x = meatObject.posX,
-		y = meatObject.posY,
-		energy = meatObject.energy,
-		minerals = meatObject.minerals,
-		mineralObj = new Mineral(x, y);
-
-		mineralObj.energy = energy;
-		mineralObj.minerals = minerals;
-
-	worldObj[x][y] = mineralObj;
+// TODO: Meat to mineral
+function meatToMineral(params) {
+	return false;
 }
 
 // TODO: Tree to mineral
@@ -977,18 +851,12 @@ function mineralToEnergy(params) {
 
 // * Проверяем возраст бота
 function checkBotAge(botObject) {
+	// console.log(`функция отработала возраст ${botObject.age[0]}`);
 	let age = botObject.age[0],
 	maxAge = botObject.age[1];
 	if (age >= maxAge) {
-		botToMeat(botObject);
-	}
-}
-
-// * Проверяем энергию бота
-function checkBotMainParam(botObject, param = 'energy') {
-	let p = botObject[param][0];
-	if (p <= 0) {
-		botToMeat(botObject);
+		botObject.flagAlive = 0;
+		// console.log(`+++bot is died+++`);
 	}
 }
 
@@ -1003,7 +871,7 @@ function setSpeed(botObject) {
 	return speed;
 }
 
-// * Проверяем количество различий между геномами ботов (проверка на родственность)
+// TODO: Check genom diffs
 function isRelative(a, b) { //передаем геномы ботов
 	let x = -1;
 	const MAX_DIFF = 2;
@@ -1026,14 +894,19 @@ function isRelative(a, b) { //передаем геномы ботов
 }
 
 let timerId = setTimeout(function tick() {
-	console.clear();
+	// console.clear();
 	console.log(`*******`);
 	console.log(`step ${worldTime}`);
 	main(worldMatrix);
 	render(worldMatrix);
 	timerId = setTimeout(tick, 500); // (*)
 	worldTime++;
-	if (worldTime >= STEPS) {
+	if (worldTime >= 1000) {
 		clearTimeout(timerId);
 	}
 }, 500); 
+
+// let testBot1 = new Bot(10, 10);
+
+// console.log(`test bot pbject is: ${testBot1.energy} ${testBot1.minerals}`);
+// console.log(`speed of bot is: ${setSpeed(testBot1)}`);
