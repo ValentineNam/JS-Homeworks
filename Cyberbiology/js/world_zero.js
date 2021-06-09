@@ -336,10 +336,23 @@ function genomVM(botObject, worldObj) {
 				adr = incAdr(adr);
 				actCounter--;
 				break;
-			case 6:
-				if (frontObjectType == 'mineral') {
-					botEatMineral(botObject, frontX, frontY);
-					energy = decEnergy(energy, 1);
+			case 9: // Bot attack another bot from front cell
+			// ToDo: Вынести "драку" ботов в отдельную функцию
+				if (frontObjectType == 'bot') {
+					let frontBot = worldObj[frontX][frontY],
+					chanceToWin = 0,
+					attEnergy = 1 + checkOwnParamLvl(botObject, 'energy'),
+					attMinerals = 1 + checkOwnParamLvl(botObject, 'minerals'),
+					defEnergy = 1 + checkOwnParamLvl(frontBot, 'energy'),
+					defMinerals = 1 + checkOwnParamLvl(frontBot, 'minerals'),
+					attHungryLvl = 10 - checkOwnParamLvl(botObject, 'energy'); // Чем аттакующий голоднее, чем яростнее нападает
+
+					chanceToWin = parseInt(attHungryLvl * attEnergy / (attEnergy + defEnergy) - defMinerals / (attMinerals + defMinerals));
+
+					if (chanceToWin >= 1) {
+						energy = botAttackBot(botObject, frontX, frontY);
+						energy = decEnergy(energy, attHungryLvl);
+					}
 					breakFlag = 1;
 				}
 				adr = incAdr(adr);
@@ -820,12 +833,12 @@ function botAttackBot(botObject, coordX, coordY) {
 		botEnergy = botObject.energy[0],
 		botMinerals = botObject.minerals[0],
 		botEnergyDiff = botObject.energy[1] - botObject.energy[0],
-		botMineralsDiff = botObject.minerals[1] - botObject.minerals[0],
+		botMineralsDiff = botObject.energy[1] - botObject.energy[0],
 		botPosX = botObject.posX,
 		botPosY = botObject.posY,
 		multiplier = 1,
-		oneBiteValue = 80,
-		temp = 0;
+		oneBiteValue = 100,
+		temp;
 
 		if (botHungry == 1) {
 			multiplier = 2.5;
@@ -833,32 +846,32 @@ function botAttackBot(botObject, coordX, coordY) {
 
 		if ((defEnergy <= multiplier * oneBiteValue) && (botEnergyDiff <= defEnergy)) {
 			temp = botEnergyDiff;
-		} else if ((treeEnergy <= multiplier * oneBiteValue) && (botEnergyDiff > treeEnergy)) {
-			temp = treeEnergy;
-		} else if ((treeEnergy > multiplier * oneBiteValue) && (botEnergyDiff <= multiplier * oneBiteValue)) {
+		} else if ((defEnergy <= multiplier * oneBiteValue) && (botEnergyDiff > defEnergy)) {
+			temp = defEnergy;
+		} else if ((defEnergy > multiplier * oneBiteValue) && (botEnergyDiff <= defEnergy)) {
 			temp = botEnergyDiff; 
-		} else if ((treeEnergy > multiplier * oneBiteValue) && (botEnergyDiff > multiplier * oneBiteValue)) {
-			temp = multiplier * oneBiteValue;
+		} else if ((defEnergy > multiplier * oneBiteValue) && (botEnergyDiff > defEnergy)) {
+			temp = oneBiteValue;
 		}
 
 		botEnergy += multiplier * temp;
 		defEnergy -= multiplier * temp;
 
-		if ((treeMinerals <= multiplier * oneBiteValue / 4) && (botMineralsDiff <= treeMinerals)) {
+		if ((defMinerals <= multiplier * oneBiteValue) && (botMineralsDiff <= defMinerals)) {
 			temp = botMineralsDiff;
-		} else if ((treeMinerals <= multiplier * oneBiteValue / 4) && (botMineralsDiff > treeMinerals)) {
-			temp = treeMinerals;
-		} else if ((treeMinerals > multiplier * oneBiteValue / 4) && (botMineralsDiff <= multiplier * oneBiteValue / 4)) {
+		} else if ((defMinerals <= multiplier * oneBiteValue) && (botMineralsDiff > defMinerals)) {
+			temp = defMinerals;
+		} else if ((defMinerals > multiplier * oneBiteValue) && (botMineralsDiff <= defMinerals)) {
 			temp = botMineralsDiff; 
-		} else if ((treeMinerals > multiplier * oneBiteValue / 4) && (botMineralsDiff > multiplier * oneBiteValue / 4)) {
-			temp = multiplier * oneBiteValue / 4;
+		} else if ((defMinerals > multiplier * oneBiteValue) && (botMineralsDiff > defMinerals)) {
+			temp = oneBiteValue;
 		}
 
 		botMinerals += multiplier * temp;
-		treeMinerals -= multiplier * temp;
+		defMinerals -= multiplier * temp;
 
-		worldMatrix[coordX][coordY].energy[0] = treeEnergy;
-		worldMatrix[coordX][coordY].minerals[0] = treeMinerals;
+		worldMatrix[coordX][coordY].energy[0] = defEnergy;
+		worldMatrix[coordX][coordY].minerals[0] = defMinerals;
 		worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
 
 		if (defBot.energy[0] <= 0) {
@@ -890,39 +903,51 @@ function botEatFrontObject(botObject, coordX, coordY, type) {
 				multiplier = 2.5;
 			}
 
-// TODO: Bot eat mineral
-function botEatMineral(botObject, coordX, coordY) {
-	if (worldMatrix[coordX][coordY].objType == 'mineral') {
-		let mineralObj = worldMatrix[coordX][coordY],
-		minerals = mineralObj.minerals[0],
-		botHungry = botObject.flagHungry,
-		botMinerals = botObject.minerals[0],
-		botMineralsDiff = botObject.minerals[1] - botObject.minerals[0],
-		botPosX = botObject.posX,
-		botPosY = botObject.posY,
-		multiplier = 1,
-		oneBiteValue = 20,
-		temp = 0;
+			if (type == 'mineral') {
+				oneBiteValue = 20;
+			}
+	
+			if ((objectEnergy <= multiplier * oneBiteValue) && (botEnergyDiff <= objectEnergy)) {
+				temp = botEnergyDiff;
+			} else if ((objectEnergy <= multiplier * oneBiteValue) && (botEnergyDiff > objectEnergy)) {
+				temp = objectEnergy;
+			} else if ((objectEnergy > multiplier * oneBiteValue) && (botEnergyDiff <= objectEnergy)) {
+				temp = botEnergyDiff; 
+			} else if ((objectEnergy > multiplier * oneBiteValue) && (botEnergyDiff > objectEnergy)) {
+				temp = oneBiteValue;
+			}
+	
+			botEnergy += multiplier * temp;
+			objectEnergy -= multiplier * temp;
+	
+			if (type == 'mineral') {
+				oneBiteValue = 80;
+			}
 
-		if (botHungry == 1) {
-			multiplier = 2.5;
+			if (type == 'tree' || type == 'meat') {
+				oneBiteValue = 20;
+			}
+
+			if ((objectMinerals <= multiplier * oneBiteValue) && (botMineralsDiff <= objectMinerals)) {
+				temp = botMineralsDiff;
+			} else if ((objectMinerals <= multiplier * oneBiteValue) && (botMineralsDiff > objectMinerals)) {
+				temp = objectMinerals;
+			} else if ((objectMinerals > multiplier * oneBiteValue) && (botMineralsDiff <= objectMinerals)) {
+				temp = botMineralsDiff; 
+			} else if ((objectMinerals > multiplier * oneBiteValue) && (botMineralsDiff > objectMinerals)) {
+				temp = oneBiteValue;
+			}
+	
+			botMinerals += multiplier * temp;
+			objectMinerals -= multiplier * temp;
+	
+			worldMatrix[coordX][coordY].energy[0] = objectEnergy;
+			worldMatrix[coordX][coordY].minerals[0] = objectMinerals;
+			worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
+			return botEnergy; 
 		}
-
-		if ((minerals <= multiplier * oneBiteValue) && (botMineralsDiff <= minerals)) {
-			temp = botMineralsDiff;
-		} else if ((minerals <= multiplier * oneBiteValue) && (botMineralsDiff > minerals)) {
-			temp = minerals;
-		} else if ((minerals > multiplier * oneBiteValue) && (botMineralsDiff <= multiplier * oneBiteValue)) {
-			temp = botMineralsDiff;
-		} else if ((minerals > multiplier * oneBiteValue) && (botMineralsDiff > multiplier * oneBiteValue)) {
-			temp = multiplier * oneBiteValue;
-		}
-
-		botMinerals += multiplier * temp;
-		minerals -= multiplier * temp;
-
-		worldMatrix[coordX][coordY].minerals[0] = minerals;
-		worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
+	} else {
+		return false;
 	}
 }
 
