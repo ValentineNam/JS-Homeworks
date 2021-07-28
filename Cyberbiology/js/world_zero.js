@@ -17,7 +17,7 @@ function Bot(coordX, coordY) {
 		this.posX = coordX;
 		this.posY = coordY;
 		this.direction = 1;
-		this.flagAttacked = 0;
+		this.flagAttacked = [0,0]; // позиция 0 - в текущем ходе, 2я - в предыдущем; 1-8 - направление, откуда атакаван 0 - не атакован
 		this.flagSleeping = 0;
 		this.flagHungry = 0;
 		this.flagMoved = 0;
@@ -164,6 +164,7 @@ createNewMineral(7, 5);
 
 function main(worldObj) {
 	clearMoveParams(worldObj);
+	unshiftFlagAttacked(worldObj);
 	vmsFunc(worldObj);
 }
 
@@ -205,6 +206,18 @@ function clearMoveParams(worldObj) {
 			let elem = worldObj[j][i];
             if (elem.objType == 'bot') {
                 elem.flagMoved = 0;
+            }
+		}
+	}
+}
+
+function unshiftFlagAttacked(worldObj) {
+	for(let j = 0; j < worldObj.length; j++) {
+		for(let i = 0; i < worldObj[j].length; i++) {
+			let elem = worldObj[j][i];
+            if (elem.objType == 'bot') {
+                elem.flagAttacked.pop();
+				elem.flagAttacked.unshift(0);
             }
 		}
 	}
@@ -318,7 +331,7 @@ function genomVM(botObject, worldObj) {
 				adr = incAdr(adr);
 				actCounter--;
 				break;
-			case 7: // Bot eat tree from front cell
+			case 7: // Bot eat meat from front cell
 			if (frontObjectType == 'meat') {
 				energy = botEatFrontObject(botObject, frontX, frontY, 'meat');
 				energy = decEnergy(energy, 1);
@@ -327,7 +340,7 @@ function genomVM(botObject, worldObj) {
 			adr = incAdr(adr);
 			actCounter--;
 			break;
-			case 8: // Bot eat tree from front cell
+			case 8: // Bot eat mineral from front cell
 				if (frontObjectType == 'mineral') {
 					energy = botEatFrontObject(botObject, frontX, frontY, 'mineral');
 					energy = decEnergy(energy, 1);
@@ -349,8 +362,9 @@ function genomVM(botObject, worldObj) {
 
 					chanceToWin = parseInt(attHungryLvl * attEnergy / (attEnergy + defEnergy) - defMinerals / (attMinerals + defMinerals));
 
+					let reverseDirection = (direction + 4) % 8;
 					if (chanceToWin >= 1) {
-						energy = botAttackBot(botObject, frontX, frontY);
+						energy = botAttackBot(botObject, frontX, frontY, reverseDirection);
 						energy = decEnergy(energy, attHungryLvl);
 					}
 					breakFlag = 1;
@@ -621,7 +635,7 @@ function treeVM(treeObject, worldObj) {
 		treeGenusType = 2;
 	}
 
-	growSpeed = Math.pow(2, (treeGenusType)) + 2; // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
+	growSpeed = Math.pow(2, (treeGenusType) - 1) + 3; // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
 
 	treeEnergy = incParam(treeObject.energy, growSpeed);
 	worldObj[posX][posY].energy[0] = treeEnergy;
@@ -824,7 +838,7 @@ function giveResources(params) {
 }
 
 // * Бот нападает на другого бота в определенном направлении
-function botAttackBot(botObject, coordX, coordY) {
+function botAttackBot(botObject, coordX, coordY, attackedFromDir) {
 	if (worldMatrix[coordX][coordY].objType == 'bot') {
 		let defBot = worldMatrix[coordX][coordY],
 		defEnergy = defBot.energy[0],
@@ -873,6 +887,8 @@ function botAttackBot(botObject, coordX, coordY) {
 		worldMatrix[coordX][coordY].energy[0] = defEnergy;
 		worldMatrix[coordX][coordY].minerals[0] = defMinerals;
 		worldMatrix[botPosX][botPosY].minerals[0] = botMinerals;
+
+		defBot.flagAttacked[0] = attackedFromDir;
 
 		if (defBot.energy[0] <= 0) {
 			botToMeat(defBot);
@@ -1056,7 +1072,7 @@ let timerId = setTimeout(function tick() {
 	console.log(`step ${worldTime}`);
 	main(worldMatrix);
 	render(worldMatrix);
-	timerId = setTimeout(tick, 500); // (*)
+	timerId = setTimeout(tick, 100); // (*)
 	worldTime++;
 	if (worldTime >= STEPS) {
 		clearTimeout(timerId);
