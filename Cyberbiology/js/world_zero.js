@@ -6,7 +6,7 @@ const CANVAS_WIDTH = 800,
 	WORLD_X = 20,
 	WORLD_Y = 20, // ! Bug: Найти баг, из-за которого падает прила при разных значениях x/y
 	MUTATION_FACTOR = 15,
-	GENS = 9, // количество разных генов
+	GENS = 10, // количество разных генов
 	STEPS = 1000;
 
 let worldTime = 0;
@@ -370,6 +370,17 @@ function genomVM(botObject, worldObj) {
 					breakFlag = 1;
 				}
 				adr = incAdr(adr);
+				actCounter--;
+				break;
+			case 10: // Bot check attacked flag
+				/* Если не атакован, то переходим к команде в адресе +5, если атакован, то к следующей за проверкой */
+				let attacked = botCheckFlagAttacked(botObject);
+				if (attacked = 0) {
+					adr = jumpAdr(adr, 5);
+				} else if ((attacked >= 1) && (attacked <= 8)) {
+					adr = incAdr(adr);
+				}
+				energy = decEnergy(energy, 1);
 				actCounter--;
 				break;
 			default:
@@ -974,6 +985,16 @@ function checkOwnParamLvl(botObject, paramType = 'energy') {
 		maxParam = botObject[paramType][1],
 		paramLvl = Math.floor(param / maxParam * 10);
 		return paramLvl; // возвращаем уровень от 0 - 10
+	} else {
+		return false;
+	}
+}
+
+// * Бот проверяет свой уровень энергии
+function botCheckFlagAttacked(botObject) {
+	if (botObject != undefined) {
+		let attacked = botObject.flagAttacked[0];
+		return attacked; // возвращаем уровень от 0 - 10
 	} else {
 		return false;
 	}
