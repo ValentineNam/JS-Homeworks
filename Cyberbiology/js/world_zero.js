@@ -558,6 +558,11 @@ function botChangeDirection(...[direction, spin]) {
 	return direction;
 }
 
+// TODO: Change direction conditional
+function botChangeDirectionСonditional(botObject) {
+	return false;
+}
+
 // * Функция проверки объекта в указанных координатах
 function botCheckDirection(botGenom, worldArray, coordX, coordY) { // * получаем координаты, возвращаем ответ 
 	// * если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
@@ -592,20 +597,20 @@ function render(arr) {
 		let line = '';
 		for(let i = 0; i < arr[j].length; i++) {
 			if (arr[j][i] != undefined && arr[j][i].objType == 'bot') {
-				line += 'x';
+				line += `\x1b[34m${'x'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'tree') {
-				line += '*';
+				line += `\x1b[32m${'*'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'mineral') {
-				line += 'o';
+				line += `\x1b[0m${'o'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'meat') {
-				line += '+';
+				line += `\x1b[31m${'+'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'wall') {
-				line += '#';
+				line += `\x1b[33m${'#'}`;
 			} else {
-				line += ' ';
+				line += `\x1b[0m${' '}`;
 			}
 		}
-		console.log(line);
+		console.log(`${line}`);
 	}
 }
 
