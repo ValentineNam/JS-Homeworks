@@ -332,8 +332,9 @@ function genomVM(botObject, worldObj) {
 					energy = botEatFrontObject(botObject, frontX, frontY, 'tree');
 					energy = decEnergy(energy, 1);
 					breakFlag = 1;
+					botObject.eat[0] += 1;
 				}
-				botObject.eat[0] += 1;
+				
 				adr = incAdr(adr);
 				actCounter--;
 				break;
@@ -342,8 +343,9 @@ function genomVM(botObject, worldObj) {
 				energy = botEatFrontObject(botObject, frontX, frontY, 'meat');
 				energy = decEnergy(energy, 1);
 				breakFlag = 1;
+				botObject.eat[1] += 1;
 			}
-			botObject.eat[1] += 1;
+			
 			adr = incAdr(adr);
 			actCounter--;
 			break;
@@ -352,8 +354,9 @@ function genomVM(botObject, worldObj) {
 					energy = botEatFrontObject(botObject, frontX, frontY, 'mineral');
 					energy = decEnergy(energy, 1);
 					breakFlag = 1;
+					botObject.eat[3] += 1;
 				}
-				botObject.eat[3] += 1;
+				
 				adr = incAdr(adr);
 				actCounter--;
 				break;
@@ -376,8 +379,9 @@ function genomVM(botObject, worldObj) {
 						energy = decEnergy(energy, attHungryLvl);
 					}
 					breakFlag = 1;
+					botObject.eat[2] += 1;
 				}
-				botObject.eat[2] += 1;
+				
 				adr = incAdr(adr);
 				actCounter--;
 				break;
