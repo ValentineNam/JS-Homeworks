@@ -26,6 +26,7 @@ function Bot(coordX, coordY) {
 		this.minerals = [8,256];
 		this.speed = 100;
 		this.genom = [];
+		this.eat = [0,0,0,0]; // кушает 0 - растения, 1 - других ботов, 2 - мясо, 3 - минералы
 }
 
 function Space() {
@@ -332,6 +333,7 @@ function genomVM(botObject, worldObj) {
 					energy = decEnergy(energy, 1);
 					breakFlag = 1;
 				}
+				botObject.eat[0] += 1;
 				adr = incAdr(adr);
 				actCounter--;
 				break;
@@ -341,6 +343,7 @@ function genomVM(botObject, worldObj) {
 				energy = decEnergy(energy, 1);
 				breakFlag = 1;
 			}
+			botObject.eat[1] += 1;
 			adr = incAdr(adr);
 			actCounter--;
 			break;
@@ -350,6 +353,7 @@ function genomVM(botObject, worldObj) {
 					energy = decEnergy(energy, 1);
 					breakFlag = 1;
 				}
+				botObject.eat[3] += 1;
 				adr = incAdr(adr);
 				actCounter--;
 				break;
@@ -373,6 +377,7 @@ function genomVM(botObject, worldObj) {
 					}
 					breakFlag = 1;
 				}
+				botObject.eat[2] += 1;
 				adr = incAdr(adr);
 				actCounter--;
 				break;
@@ -583,13 +588,7 @@ function botChangeDirectionСonditional(botObject, dir) {
 	} else {
 		botObject.direction = getRandomInt(1, 8);
 	}
-	// return botObject.direction;
 }
-
-// console.log(`${botChangeDirectionСonditional(new Bot(2, 2), 1)}`);
-// console.log(`${botChangeDirectionСonditional(new Bot(2, 3), 0)}`);
-// console.log(`${botChangeDirectionСonditional(new Bot(2, 4), -1)}`);
-// console.log(`${botChangeDirectionСonditional(new Bot(2, 5), 9)}`);
 
 // * Функция проверки объекта в указанных координатах
 function botCheckDirection(botGenom, worldArray, coordX, coordY) { // * получаем координаты, возвращаем ответ 
@@ -625,7 +624,7 @@ function render(arr) {
 		let line = '';
 		for(let i = 0; i < arr[j].length; i++) {
 			if (arr[j][i] != undefined && arr[j][i].objType == 'bot') {
-				line += `\x1b[94m${'x'}`;
+				line += colorBot(arr[j][i]);
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'tree') {
 				line += `\x1b[32m${'*'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'mineral') {
@@ -640,6 +639,31 @@ function render(arr) {
 		}
 		console.log(`${line}`);
 	}
+}
+
+function colorBot(botObject) {
+	let eatArr = botObject.eat,
+	line = '';
+	if ((eatArr[0] > 0) && (eatArr[1] == 0) && (eatArr[2] == 0) && (eatArr[3] == 0)) { // green => растения
+		line = `\x1b[32m${'x'}`;
+		// console.log(`${eatArr} im green`);
+	} else if ((eatArr[0] == 0) && ((eatArr[1] > 0) || (eatArr[2] > 0)) && (eatArr[3] == 0)) { // red => мясо
+		line = `\x1b[31m${'x'}`;
+		// console.log(`${eatArr} im red`);
+	} else if ((eatArr[0] == 0) && (eatArr[1] == 0) && (eatArr[2] == 0) && (eatArr[3] > 0)) { // dark grey => минералы 
+		line = `\x1b[90m${'x'}`;
+		// console.log(`${eatArr} im dark grey`);
+	} else if (((eatArr[0] > 0) || (eatArr[3] > 0)) && ((eatArr[1] > 0) || (eatArr[2] > 0))) { // magenta ~ purple => смешанное
+		line = `\x1b[35m${'x'}`;
+		// console.log(`${eatArr} im purple`);
+	} else if ((eatArr[0] > 0) && (eatArr[1] == 0) && (eatArr[2] == 0) && (eatArr[3] > 0)) { // yellow => не мясо
+		line = `\x1b[33m${'x'}`;
+		// console.log(`${eatArr} im yellow`);
+	} else {
+		line = `\x1b[36m${'x'}`; // cian ~ marina blue => ничего?
+		// console.log(`${eatArr} im cian`);
+	}
+	return line;
 }
 
 // * Создаем стену по краю мира
@@ -1023,11 +1047,11 @@ function checkOwnParamLvl(botObject, paramType = 'energy') {
 	}
 }
 
-// * Бот проверяет свой уровень энергии
+// * Бот проверяет атакован ли он?
 function botCheckFlagAttacked(botObject) {
 	if (botObject != undefined) {
 		let attacked = botObject.flagAttacked[0];
-		return attacked; // возвращаем уровень от 0 - 10
+		return attacked; // возвращаем направление атаки в текущем ходу, 0 если не атакован
 	} else {
 		return false;
 	}
