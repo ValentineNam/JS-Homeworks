@@ -6,7 +6,7 @@ const CANVAS_WIDTH = 800,
 	WORLD_X = 20,
 	WORLD_Y = 20, // ! Bug: Найти баг, из-за которого падает прила при разных значениях x/y
 	MUTATION_FACTOR = 15,
-	GENS = 10, // количество разных генов
+	GENS = 11, // количество разных генов
 	STEPS = 1000;
 
 let worldTime = 0;
@@ -40,7 +40,7 @@ function Space() {
 
 function Tree(coordX, coordY) {
 	this.objType = 'tree';
-	this.age = [0,2048];
+	this.age = [0,512];
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [300,2048];
@@ -184,6 +184,9 @@ function vmsFunc(worldObj) {
             } else if (elem.objType == 'tree') {
 				treeVM(elem, worldObj);
 				elem.age[0] += 1;
+				if (elem.age[0] >= elem.age[1]) {
+					treeToMineral(elem, worldObj);
+				}
             } else if (elem.objType == 'meat') {
 				meatVM(elem, worldObj);
 				elem.age[0] += 1;
@@ -235,6 +238,7 @@ function genomVM(botObject, worldObj) {
 	posY = botObject.posY,
 	botGenom = botObject.genom,
 	botMoved = botObject.flagMoved,
+	attacked = botCheckFlagAttacked(botObject),
 	botSpeed;
 
 	for (;((breakFlag == 0) && (actCounter >= 0) && (botMoved != 1));) {
@@ -374,13 +378,26 @@ function genomVM(botObject, worldObj) {
 				break;
 			case 10: // Bot check attacked flag
 				/* Если не атакован, то переходим к команде в адресе +5, если атакован, то к следующей за проверкой */
-				let attacked = botCheckFlagAttacked(botObject);
 				if (attacked = 0) {
 					adr = jumpAdr(adr, 5);
 				} else if ((attacked >= 1) && (attacked <= 8)) {
 					adr = incAdr(adr);
 				}
 				energy = decEnergy(energy, 1);
+				actCounter--;
+				break;
+			case 11: // Bot spin face to face to attacked direction
+				/* Если атакован, то переходим поворачиваемся "лицом" в направлении атаки, иначе поворачиваемся в случайном направлении */
+				// let attacked = botCheckFlagAttacked(botObject);
+				if (attacked = 0) {
+					direction = botChangeDirection();
+				} else if ((attacked >= 1) && (attacked <= 8)) {
+					let newDirection = (attacked + 4) % 8;
+					botChangeDirectionСonditional(botObject, newDirection);
+					energy = decEnergy(energy, 3);
+				}
+				adr = incAdr(adr);
+				energy = decEnergy(energy,1);
 				actCounter--;
 				break;
 			default:
@@ -532,6 +549,7 @@ function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 	return coordsXY; //[x,y] || -1
 }
 
+// * Бот поворачивается на 1 сектор в направлении spin, относительно текущего направления
 function botChangeDirection(...[direction, spin]) {
 	if (direction != 0) {
 		switch (spin) {
@@ -559,9 +577,19 @@ function botChangeDirection(...[direction, spin]) {
 }
 
 // TODO: Change direction conditional
-function botChangeDirectionСonditional(botObject) {
-	return false;
+function botChangeDirectionСonditional(botObject, dir) {
+	if ((dir != 0) && (dir >= 1) && (dir <= 8)) {
+		botObject.direction = dir;
+	} else {
+		botObject.direction = getRandomInt(1, 8);
+	}
+	// return botObject.direction;
 }
+
+// console.log(`${botChangeDirectionСonditional(new Bot(2, 2), 1)}`);
+// console.log(`${botChangeDirectionСonditional(new Bot(2, 3), 0)}`);
+// console.log(`${botChangeDirectionСonditional(new Bot(2, 4), -1)}`);
+// console.log(`${botChangeDirectionСonditional(new Bot(2, 5), 9)}`);
 
 // * Функция проверки объекта в указанных координатах
 function botCheckDirection(botGenom, worldArray, coordX, coordY) { // * получаем координаты, возвращаем ответ 
@@ -597,7 +625,7 @@ function render(arr) {
 		let line = '';
 		for(let i = 0; i < arr[j].length; i++) {
 			if (arr[j][i] != undefined && arr[j][i].objType == 'bot') {
-				line += `\x1b[34m${'x'}`;
+				line += `\x1b[94m${'x'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'tree') {
 				line += `\x1b[32m${'*'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'mineral') {
@@ -605,7 +633,7 @@ function render(arr) {
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'meat') {
 				line += `\x1b[31m${'+'}`;
 			} else if (arr[j][i] != undefined && arr[j][i].objType == 'wall') {
-				line += `\x1b[33m${'#'}`;
+				line += `\x1b[90m${'#'}`;
 			} else {
 				line += `\x1b[0m${' '}`;
 			}
@@ -1033,9 +1061,19 @@ function meatToMineral(meatObject, worldObj) {
 }
 
 // TODO: Tree to mineral
-function treeToMineral(params) {
-	return false;
+function treeToMineral(treeObject, worldObj) {
+	let x = treeObject.posX,
+		y = treeObject.posY,
+		energy = treeObject.energy,
+		minerals = treeObject.minerals,
+		mineralObj = new Mineral(x, y);
+
+		mineralObj.energy = energy;
+		mineralObj.minerals = minerals;
+
+	worldObj[x][y] = mineralObj;
 }
+
 
 // TODO: Mineral to energy
 function mineralToEnergy(params) {
