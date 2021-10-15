@@ -10,6 +10,8 @@ const CANVAS_WIDTH = 800,
 	STEPS = 1000;
 
 let worldTime = 0;
+let worldEnergy = 100000;
+let fullWorldEnergy = 0;
 
 function Bot(coordX, coordY) {
 		this.objType = 'bot';
@@ -17,7 +19,7 @@ function Bot(coordX, coordY) {
 		this.posX = coordX;
 		this.posY = coordY;
 		this.direction = 1;
-		this.flagAttacked = [0,0]; // позиция 0 - в текущем ходе, 2я - в предыдущем; 1-8 - направление, откуда атакаван 0 - не атакован
+		this.flagAttacked = [0,0]; // позиция 0 - в текущем ходе, 1я - в предыдущем; 1-8 - направление, откуда атакаван 0 - не атакован
 		this.flagSleeping = 0;
 		this.flagHungry = 0;
 		this.flagMoved = 0;
@@ -27,11 +29,14 @@ function Bot(coordX, coordY) {
 		this.speed = 100;
 		this.genom = [];
 		this.eat = [0,0,0,0]; // кушает 0 - растения, 1 - других ботов, 2 - мясо, 3 - минералы
+		// this.randomGenom = function () {
+		// 	this.genom = randomGenomGenerator();
+		// };
 }
 
 function Space() {
 	this.objType = 'space';
-	this.energy = [271,8192];
+	// this.energy = [271,8192];
 	// TODO: добавить рассеивание энергии в пространстве, поглошение ее деревьями
 	// TODO: и превращение минералов в энергию после "смерти". Также, добавить
 	// TODO: прямое получение энергии пространства из клетки пустого пространства
@@ -62,7 +67,7 @@ function Meat(coordX, coordY) {
 
 function Mineral(coordX, coordY) {
 	this.objType = 'mineral';
-	this.age = [0,4096];
+	this.age = [0,128];
 	this.posX = coordX;
 	this.posY = coordY;
 	this.energy = [20,256];
@@ -90,7 +95,7 @@ function emptySpaceGenerator(worldObj) {
 	}
 }
 
-// * возвращает геном (массив длиной 16 из случайных чисел от 0 до 9)
+// * возвращает геном (массив длиной 16 из случайных чисел от 0 до GENS)
 function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = GENS) {
 	let GENOM = [];
 	for (let x = genomLength; x--;) {
@@ -136,9 +141,8 @@ for (let index = 70; index--;) {
 	}
 
 	createNewBot(x, y, 'randomGenom');
-	
+	worldEnergy -= (worldMatrix[x][y].energy[0] + worldMatrix[x][y].minerals[0] * 4);
 }
-
 
 for (let index = 5; index--;) {
 	
@@ -154,19 +158,62 @@ for (let index = 5; index--;) {
 	e = getRandomInt(32, 128);
 	m = getRandomInt(128, 512);
 	createNewMineral(x, y, e, m);
+	worldEnergy -= (worldMatrix[x][y].energy[0] + worldMatrix[x][y].minerals[0] * 4);
 	
 }
 
-createNewTree(7, 7);
-createNewTree(4, 4, 'grass');
-createNewTree(9, 9, 'bush');
 
-createNewMineral(7, 5);
+for (let index = 3; index--;) {
+	
+	let x, y;
+
+	x = getRandomInt(1, WORLD_X - 1);
+	y = getRandomInt(1, WORLD_Y - 1);
+
+	while (worldMatrix[x][y].objType != 'space') {
+		x = getRandomInt(1, WORLD_X - 1);
+		y = getRandomInt(1, WORLD_Y - 1);
+	}
+	createNewTree(x, y);
+	worldEnergy -= (worldMatrix[x][y].energy[0] + worldMatrix[x][y].minerals[0]  * 4);
+}
+
+for (let index = 3; index--;) {
+	
+	let x, y;
+
+	x = getRandomInt(1, WORLD_X - 1);
+	y = getRandomInt(1, WORLD_Y - 1);
+
+	while (worldMatrix[x][y].objType != 'space') {
+		x = getRandomInt(1, WORLD_X - 1);
+		y = getRandomInt(1, WORLD_Y - 1);
+	}
+	createNewTree(x, y, 'grass');
+	worldEnergy -= (worldMatrix[x][y].energy[0] + worldMatrix[x][y].minerals[0]  * 4);
+}
+
+for (let index = 3; index--;) {
+	
+	let x, y;
+
+	x = getRandomInt(1, WORLD_X - 1);
+	y = getRandomInt(1, WORLD_Y - 1);
+
+	while (worldMatrix[x][y].objType != 'space') {
+		x = getRandomInt(1, WORLD_X - 1);
+		y = getRandomInt(1, WORLD_Y - 1);
+	}
+	createNewTree(x, y, 'bush');
+	worldEnergy -= (worldMatrix[x][y].energy[0] + worldMatrix[x][y].minerals[0]  * 4);
+}
+
 
 function main(worldObj) {
 	clearMoveParams(worldObj);
 	unshiftFlagAttacked(worldObj);
 	vmsFunc(worldObj);
+	checkSummEnergy(worldObj);
 }
 
 // * основная функция, которая обходит двумерный мировой массив и запускает другие функции, в зависимости от объекта на карте
@@ -197,7 +244,25 @@ function vmsFunc(worldObj) {
             } else if (elem.objType == 'mineral') {
 				mineralsVM(elem);
 				elem.age[0] += 1;
+				if (elem.age[0] >= elem.age[1]) {
+					mineralToEnergy(elem, worldObj);
+				}
             } else if (elem.objType == 'space') {
+            }
+		}
+	}
+}
+
+function checkSummEnergy(worldObj) {
+	fullWorldEnergy = worldEnergy;
+	for(let j = 0; j < worldObj.length; j++) {
+		for(let i = 0; i < worldObj[j].length; i++) {
+			let elem = worldObj[j][i];
+            if (elem.energy != undefined) {
+                fullWorldEnergy += elem.energy[0];
+            }
+			if (elem.minerals != undefined) {
+                fullWorldEnergy += (elem.minerals[0] * 4);
             }
 		}
 	}
@@ -360,7 +425,7 @@ function genomVM(botObject, worldObj) {
 				adr = incAdr(adr);
 				actCounter--;
 				break;
-			case 9: // Bot attack another bot from front cell
+			case 9: // Bot bite another bot from front cell
 			// ToDo: Вынести "драку" ботов в отдельную функцию
 				if (frontObjectType == 'bot') {
 					let frontBot = worldObj[frontX][frontY],
@@ -449,6 +514,7 @@ function decEnergy(energy, increment) {
 	(energy - increment > 0) ?
 	(energy -= increment) :
 	(energy = 0);
+	worldEnergy += increment;
 	return energy;
 }
 
@@ -709,6 +775,12 @@ function treeVM(treeObject, worldObj) {
 
 	growSpeed = Math.pow(2, (treeGenusType) - 1) + 3; // ! ToDo: Вынести вычисление скорости роста в отдельную функцию при создании дерева
 
+	if (growSpeed >= Math.floor(worldEnergy  / 5)) {
+		growSpeed = Math.floor(worldEnergy / 5);
+	}
+
+	worldEnergy -= growSpeed * 5;
+
 	treeEnergy = incParam(treeObject.energy, growSpeed);
 	worldObj[posX][posY].energy[0] = treeEnergy;
 	treeMinerals = incParam(treeObject.minerals, growSpeed);
@@ -726,6 +798,7 @@ function treeVM(treeObject, worldObj) {
 // * Функция создания нового дерева в определенных координатах
 function createNewTree(coordX, coordY, genusType = 'tree') {
 	let newTree = new Tree(coordX, coordY);
+
 	if ((genusType == 'grass') || (genusType == 'bush')) {
 		newTree.genus = genusType;
 		if (genusType == 'grass') {
@@ -738,6 +811,21 @@ function createNewTree(coordX, coordY, genusType = 'tree') {
 			newTree.age[1] = 1024;
 		}
 	}
+
+	if (((newTree.energy[0] + newTree.minerals[0] * 4) > worldEnergy)){
+		if ((worldEnergy >= 5)) {
+			newTree.energy[0] = Math.floor(worldEnergy, 5) + worldEnergy % 5;
+			newTree.minerals[0] = Math.floor(worldEnergy, 5) * 4;
+		} else {
+			newTree.energy[0] = Math.floor(worldEnergy, 2);
+			newTree.minerals[0] = Math.floor(worldEnergy, 2) + worldEnergy % 2;
+		}
+
+		worldEnergy = 0;
+	} else {
+		worldEnergy -= (newTree.energy[0] + newTree.minerals[0] * 4);
+	}
+
 	worldMatrix[coordX][coordY] = newTree;
 }
 
@@ -812,6 +900,7 @@ function crystalization(targetObject, worldObj = worldMatrix) {
 
 		energy = decEnergy(energy, 4);
 		minerals = incParam(targetObject.minerals, 1);
+		worldEnergy -= 4; // поправка на прибавление энергии из decEnergy
 		worldObj[posX][posY].energy[0] = energy;
 		worldObj[posX][posY].minerals[0] = minerals;	
 	}
@@ -824,6 +913,9 @@ function createNewBot(coordX, coordY, ...[mode, parentGenom]) {
 	genom = newBot['genom'];
 
 	if (mode == 'randomGenom') {
+		// console.log(genom);
+		// genom.randomGenom();
+		// console.log(genom);
 		genom = randomGenomGenerator();
 	} else if (mode == 'parentGenom') {
 		genom = parentGenom;
@@ -1078,12 +1170,12 @@ function botToMeat(botObject) {
 function meatToMineral(meatObject, worldObj) {
 	let x = meatObject.posX,
 		y = meatObject.posY,
-		energy = meatObject.energy,
-		minerals = meatObject.minerals,
+		energy = meatObject.energy[0],
+		minerals = meatObject.minerals[0],
 		mineralObj = new Mineral(x, y);
 
-		mineralObj.energy = energy;
-		mineralObj.minerals = minerals;
+		mineralObj.energy[0] = energy;
+		mineralObj.minerals[0] = minerals;
 
 	worldObj[x][y] = mineralObj;
 }
@@ -1092,20 +1184,28 @@ function meatToMineral(meatObject, worldObj) {
 function treeToMineral(treeObject, worldObj) {
 	let x = treeObject.posX,
 		y = treeObject.posY,
-		energy = treeObject.energy,
-		minerals = treeObject.minerals,
+		energy = treeObject.energy[0],
+		minerals = treeObject.minerals[0],
 		mineralObj = new Mineral(x, y);
 
-		mineralObj.energy = energy;
-		mineralObj.minerals = minerals;
+		mineralObj.energy[0] = energy;
+		mineralObj.minerals[0] = minerals;
 
 	worldObj[x][y] = mineralObj;
 }
 
 
 // TODO: Mineral to energy
-function mineralToEnergy(params) {
-	return false;
+function mineralToEnergy(mineralObject, worldObj) {
+	let x = mineralObject.posX,
+		y = mineralObject.posY,
+		energy = mineralObject.energy[0],
+		minerals = mineralObject.minerals[0],
+		spaceObj = new Space(x, y);
+
+	worldEnergy += energy + minerals * 4;
+	
+	worldObj[x][y] = spaceObj;
 }
 
 // * Проверяем возраст бота
@@ -1162,6 +1262,7 @@ let timerId = setTimeout(function tick() {
 	console.clear();
 	console.log(`*******`);
 	console.log(`step ${worldTime}`);
+	console.log(`e = ${worldEnergy} | fe = ${fullWorldEnergy}`);
 	main(worldMatrix);
 	render(worldMatrix);
 	timerId = setTimeout(tick, 100); // (*)
