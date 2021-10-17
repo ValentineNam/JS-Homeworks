@@ -831,13 +831,13 @@ function createNewTree(coordX, coordY, genusType = 'tree') {
 
 function treeMakeChild(treeObject, treeGenusType, worldObj) {
 	let parentX = treeObject.posX,
-	parentY = treeObject.posY,
-	newTreeX,
-	newTreeY;
+		parentY = treeObject.posY,
+		newTreeX,
+		newTreeY;
 
 	for (let index = 15; index--; ) {
 		let difX = getRandomInt(-treeGenusType, treeGenusType),
-		difY = getRandomInt(-treeGenusType, treeGenusType);
+			difY = getRandomInt(-treeGenusType, treeGenusType);
 		
 		while ((difX == 0) && (difY == 0)) {
 			difX = getRandomInt(-treeGenusType, treeGenusType),
