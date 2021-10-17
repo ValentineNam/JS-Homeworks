@@ -5,7 +5,7 @@ import { drawTree, drawBush, drawGrass, drawBot } from './draw_models.js';
 const
     CANVAS_WIDTH = 601,
     CANVAS_HEIGTH = 601,
-    GRID_SIZE = 40,
+    GRID_SIZE = 10,
     GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
 	GENS = 11, // количество разных генов
@@ -60,17 +60,210 @@ class Bot {
             y = this.y * 10;
         drawBot(ctx, x, y, s, this.color);
     }
-/* Метод увеличвения возраста */
+/* Метод увеличения возраста */
     incAge = incrementAge;
 /* Метод перемещения в направлении взгляда */    
     move() {
         // ! ToDo: Двигатся в направлении взгляда
-        this.flagMoved = 1;
+        let ax = this.x,
+            ay = this.y;
+        let frontCoords = getFrontCellCoordinates(this.direction, ax, ay);
+        if ((frontCoords != -1) && (this.flagMoved != 1)) {
+            let bx = frontCoords[0],
+                by = frontCoords[1];
+            let frontObj = botCheckDirection(this.genom, bx, by);
+            if (frontObj == 0) {
+                worldMatrix[bx][by] = this;
+                worldMatrix[bx][by].x = bx;
+                worldMatrix[bx][by].y = by;
+                // console.log(`Bot goto ${bx}:${by} it is now ${worldMatrix[bx][by].objType}`);
+                worldMatrix[ax][ay] = new Space();
+                // console.log(`Place ${ax}:${ay} is now ${worldMatrix[ax][ay].objType}`);
+                this.flagMoved = 1;
+            }
+        }
+    }
+/* Метод изменения направления взгляда */    
+    changeDirection(opt) {
+        this.direction = chooseNewDirection(this.direction, opt);
+            // console.log(`${this.objType} at ${this.x}:${this.y} has new dir ${this.direction}`);
     }
 /* Метод переводит флаг движения в состояние 0 */
     clearMoveParams() {
     this.flagMoved = 0;
     }
+}
+
+/* Меняем направление взгляда бота - возвращает новое значение direction в зависимости от условий */
+function chooseNewDirection(dir, opt = 'random') {
+    let newDirection;
+    switch (opt) {
+        case 'random':
+            newDirection = getRandomInt(1, 8);
+            break;
+        case 'left':
+            newDirection = botChangeDirection(dir, 'left');
+        break;
+        case 'right':
+            ewDirection = botChangeDirection(dir, 'right');
+            break;
+        case 'sleep':
+            newDirection = 0;
+            break;
+        default:
+            break;
+    }
+    return newDirection;
+}
+
+/* Бот поворачивается на 1 сектор в направлении spin, относительно текущего направления */
+function botChangeDirection(...[direction, spin]) {
+	if (direction != 0) {
+		switch (spin) {
+			case 'left':
+				if (direction != 1) {
+					direction--;
+				} else {
+					direction = 8;
+				}
+				break;
+			case 'right':
+				if (direction != 8) {
+					direction++;
+				} else {
+					direction = 1;
+				}
+				break;
+			default:
+				direction = getRandomInt(1, 8);
+		}
+	} else {
+		direction = getRandomInt(1, 8);
+	}
+	return direction;
+}
+
+/* Вычисление координат клетки в направлении взгляда бота */
+// Прости меня будущий я, но как это сделать иначе мне не понятно 18.11.20
+function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
+	let coordsXY = -1;
+	if (viewDirection != 0) {
+		switch (viewDirection) {
+			case 1:
+				if (botPosY != 0) {
+					coordsXY = [botPosX, botPosY - 1];	
+				} else {
+					return -1;
+				}
+				break;
+			case 2:
+				if (botPosX < world_width - 1 && botPosY != 0) {
+					coordsXY = [botPosX + 1, botPosY - 1];	
+				} else {
+					return -1;
+				}
+				break;
+			case 3:
+				if (botPosX < world_width- 1) {
+					coordsXY = [botPosX + 1, botPosY];	
+				} else {
+					return -1;
+				}
+				break;
+			case 4:
+			if (botPosX < world_width- 1 && botPosY < world_heigth - 1) {
+				coordsXY = [botPosX + 1, botPosY + 1];	
+			} else {
+				return -1;
+			}
+			break;
+			case 5:
+			if (botPosY < world_heigth- 1) {
+				coordsXY = [botPosX, botPosY + 1];	
+			} else {
+				return -1;
+			}
+			case 6:
+			if (botPosX > 0 && botPosY < world_heigth- 1) {
+				coordsXY = [botPosX - 1, botPosY + 1];	
+			} else {
+				return -1;
+			}
+			break;
+			case 7:
+			if (botPosX > 0) {
+				coordsXY = [botPosX - 1, botPosY];	
+			} else {
+				return -1;
+			}
+			break;
+			case 8:
+			if (botPosX > 0 && botPosY > 0) {
+				coordsXY = [botPosX - 1, botPosY - 1];	
+			} else {
+				return -1;
+			}
+			break;
+
+			default:
+				return -1;
+				// break;
+		}
+	} else if (viewDirection == 0) {
+		coordsXY = -1;
+	}
+	return coordsXY; //[x,y] || -1
+}
+
+/* Функция проверки объекта в указанных координатах */
+function botCheckDirection(botGenom, coordX, coordY) { // * получаем координаты, возвращаем ответ 
+	// * если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
+    // console.log(`coordX ${coordX} coordY ${coordY} is ${worldMatrix[coordX][coordY].objType}`);
+	let objType = worldMatrix[coordX][coordY].objType;
+	let res;
+	switch (objType) {
+		case 'space':
+			res = 0;
+			break;
+		case 'bot':
+			let frontBotGenom = worldMatrix[coordX][coordY].genom;
+			isRelative(botGenom, frontBotGenom) == 1 ? res = 1 : res = 2;
+		case 'tree':
+			res = 3;
+			break;
+		case 'mineral':
+			res = 4;
+			break;
+		case 'wall':
+			res = -1;
+			break;
+		default:
+			res = 255;
+			break;
+	}
+	return res;
+}
+
+/* Проверяем количество различий между геномами ботов (проверка на родственность) */
+function isRelative(a, b) { // передаем геномы ботов
+	let res = -1;
+	const MAX_DIFF = 2; // Максимальное отличие, чтобы считаться родственником
+	let diff = 0;
+	if (a.length == b.length) {
+		for (let i = 0; i < a.length; i++) {
+			if (a[i] != b[i]) {
+				diff++;
+			}
+			if (diff > MAX_DIFF) {
+				res = 0;
+				break;
+			}
+		}
+		if (diff <= MAX_DIFF) {
+			res = 1;
+		}
+	}
+	return res; // -1 разного размера геномы, 0 не родственники, 1 родственники
 }
 
 class Tree {
@@ -269,7 +462,6 @@ function treeCheckMakeChild() {
     let age = this.age[0],
         e = checkOwnParamLvl(this, 'energy'),
         m = checkOwnParamLvl(this, 'minerals');
-
     if ((e >= 7) && (m >= 7) && (age >= 30)) {
         this.createChild();
     }
@@ -309,11 +501,13 @@ class Wall {
 
 /* Заполняем "мир" пустым пространством */
 function emptySpaceGenerator(worldObj) {
-	for(let j = worldObj.length - 1; j--;) {
-		for(let i = worldObj[j].length - 1; i--;) {
+	for(let j = worldObj.length; j--;) {
+		for(let i = worldObj[j].length; i--;) {
 			worldObj[j][i] = new Space();
 		}
 	}
+    // console.log(`0:0 - ${worldObj[0][0].objType}`);
+    // console.log(`14:14 - ${worldObj[14][14].objType}`);
 }
 
 /* Возвращает геном (массив длиной 16 из случайных чисел от 0 до GENS) */
@@ -366,7 +560,7 @@ addEventListener('click', (event) => {
 
 function animate() {
     timerId = requestAnimationFrame(animate);
-    // ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGTH);
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGTH);
 
     worldMatrix.forEach(i => {
         i.forEach(j => {
@@ -499,6 +693,10 @@ timerId = setTimeout(function tick() {
             if (j.objType == 'tree') {
                 j.growth();
                 j.checkMakeChild();
+            }
+            if (j.objType == 'bot') {
+                j.changeDirection();
+                j.move();
             }
         });
     });
