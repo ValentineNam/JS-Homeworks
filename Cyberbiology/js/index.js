@@ -5,11 +5,11 @@ import { drawTree, drawBush, drawGrass, drawBot } from './draw_models.js';
 const
     CANVAS_WIDTH = 601,
     CANVAS_HEIGTH = 601,
-    GRID_SIZE = 10,
+    GRID_SIZE = 30,
     GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
 	GENS = 11, // количество разных генов
-	STEPS = 1000;
+	STEPS = 200;
 
 let render_speed = 1,
     timerId,
@@ -44,9 +44,9 @@ class Bot {
 		this.flagAlive = 1;
 		this.energy = [0,1024];
 		this.minerals = [0,256];
-		this.speed = 100;
+		this.speed = 10;
 		this.genom = [];
-		this.eat = [0,0,0,0]; // кушает 0 - растения, 1 - других ботов, 2 - мясо, 3 - минералы
+		this.eat = [0,0,0,0];   // кушает 0 - растения, 1 - других ботов, 2 - мясо, 3 - минералы
     }
 /* Метод генерации рандомного генома */
     generateRandomGenom() {
@@ -64,33 +64,145 @@ class Bot {
     incAge = incrementAge;
 /* Метод перемещения в направлении взгляда */    
     move() {
-        // ! ToDo: Двигатся в направлении взгляда
-        let ax = this.x,
-            ay = this.y;
-        let frontCoords = getFrontCellCoordinates(this.direction, ax, ay);
-        if ((frontCoords != -1) && (this.flagMoved != 1)) {
-            let bx = frontCoords[0],
-                by = frontCoords[1];
-            let frontObj = botCheckDirection(this.genom, bx, by);
-            if (frontObj == 0) {
-                worldMatrix[bx][by] = this;
-                worldMatrix[bx][by].x = bx;
-                worldMatrix[bx][by].y = by;
-                // console.log(`Bot goto ${bx}:${by} it is now ${worldMatrix[bx][by].objType}`);
-                worldMatrix[ax][ay] = new Space();
-                // console.log(`Place ${ax}:${ay} is now ${worldMatrix[ax][ay].objType}`);
-                this.flagMoved = 1;
-            }
-        }
+        let moveSpeed = setMoveSpeed(this);
+        checkEnergyForMove(this, moveSpeed) ? botMove(this, moveSpeed) : botSleep(this);
     }
 /* Метод изменения направления взгляда */    
     changeDirection(opt) {
         this.direction = chooseNewDirection(this.direction, opt);
-            // console.log(`${this.objType} at ${this.x}:${this.y} has new dir ${this.direction}`);
+    }
+/* Метод поедания объекта, находящегося спереди в направлении взгляда */   
+    eat() {
+        botEatFrontObject();
     }
 /* Метод переводит флаг движения в состояние 0 */
     clearMoveParams() {
-    this.flagMoved = 0;
+        this.flagMoved = 0;
+    }
+}
+
+function setMoveSpeed(botObj) {
+    let eLvl = checkOwnParamLvl(botObj, 'energy'),
+        mLvl = checkOwnParamLvl(botObj, 'minerals');
+    return (botObj.direction % 2 == 1) ?
+        10 - eLvl +  Math.ceil(mLvl / 2) :
+        Math.ceil(1.41 * (10 - eLvl +  Math.ceil(mLvl / 2)));   // шаг по диагонали требует в 1.41 раз больше энергии
+}
+
+function botMove(botObj, moveSpeed) {
+    let ax = botObj.x,
+        ay = botObj.y,
+        frontCoords = getFrontCellCoordinates(botObj.direction, ax, ay);
+    if ((frontCoords != -1) && (botObj.flagMoved != 1)) {
+        let bx = frontCoords[0],
+            by = frontCoords[1];
+        let frontObj = botCheckDirection(botObj.genom, bx, by);
+        if (frontObj == 0) {
+            worldMatrix[bx][by] = botObj;
+            worldMatrix[bx][by].x = bx;
+            worldMatrix[bx][by].y = by;
+            worldMatrix[ax][ay] = new Space();
+            botDecEnergy(botObj, moveSpeed);
+            botObj.flagMoved = 1;
+        }
+    }
+}
+
+function botEatFrontObject(botObj) {
+    let ax = botObj.x,
+        ay = botObj.y,
+        frontCoords = getFrontCellCoordinates(botObj.direction, ax, ay);
+    if ((frontCoords != -1) && (botObj.flagMoved != 1)) {
+        let bx = frontCoords[0],
+            by = frontCoords[1];
+        let frontObj = botCheckDirection(botObj.genom, bx, by);
+        // * если пусто = 0, родственник = 1, чужой бот = 2, мясо = 3, дерево = 4, минерал = 5, стена = -1, ошибка 255
+        switch (frontObj) {
+            // * группируем кейсы 1-5
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                eatFromCoords(botObj, bx, by)
+                break;
+        
+            default:
+                break;
+        }
+    }
+}
+
+function eatFromCoords(botObj, x, y) {
+    let frontObj = worldMatrix[x][y],
+        frontType = frontObj.type,
+        energyLvl = checkOwnParamLvl(botObj, 'energy'),
+        multiplier = 1;
+    if (flagHungry == 1) {
+        multiplier = 2.5;
+    }
+    if (energyLvl <= 2) {
+        botObj.flagHungry = 1;
+    }
+    switch (frontType) {
+        case 'bot':
+            botEatBot(botObj, frontObj);
+            break;
+        case 'tree':
+            botEatTree(botObj, frontObj);
+            break;
+        case 'mineral':
+            botEatMineral(botObj, frontObj);
+            break;
+        default:
+            break;
+    }
+}
+
+// ! ToDo: Дописать эту функцию + передавать мультипликатор
+function botEatBot(botObj, frontObj) {
+    let ae = botObj.energy[0],
+        am = botObj.minerals[0],
+        be = frontObj.energy[0],
+        bm = frontObj.minerals[0],
+        chanceToWin = getRandomInt(0, 100);
+    if (bm > am) { // * если атакуемый бот "толще"
+        chanceToWin > 80 ?
+            true : // * откусили (20% шанс)
+            false ; // * не откусили (80% шанс)
+    } else {
+        chanceToWin > 20 ?
+            true : // * откусили (80% шанс)
+            false ; // * не откусили (20% шанс)
+    }
+}
+
+function botEatTree(params) {
+    
+}
+
+function botEatMineral(params) {
+    
+}
+
+function botSleep(botObj) {
+    let ax = botObj.x,
+        ay = botObj.y;
+    worldMatrix[ax][ay].direction = 0;
+}
+
+function botDecEnergy(botObj, decrement) {
+    botObj.energy[0] -= decrement;
+    worldEnergy += decrement;
+}
+
+function photosynthesis(obj) {
+    if (worldEnergy >= 14) {
+        obj.energy[0] += 14;
+        worldEnergy -= 14;
+    } else if (worldEnergy > 0) {
+        obj.energy[0] += worldEnergy;
+        worldEnergy = 0;
     }
 }
 
@@ -105,7 +217,7 @@ function chooseNewDirection(dir, opt = 'random') {
             newDirection = botChangeDirection(dir, 'left');
         break;
         case 'right':
-            ewDirection = botChangeDirection(dir, 'right');
+            newDirection = botChangeDirection(dir, 'right');
             break;
         case 'sleep':
             newDirection = 0;
@@ -216,23 +328,25 @@ function getFrontCellCoordinates(viewDirection = 0, botPosX, botPosY) {
 }
 
 /* Функция проверки объекта в указанных координатах */
-function botCheckDirection(botGenom, coordX, coordY) { // * получаем координаты, возвращаем ответ 
-	// * если пусто = 0, родственник = 1, чужой бот = 2, дерево = 3, минерал = 4, стена = -1, ошибка 255
-    // console.log(`coordX ${coordX} coordY ${coordY} is ${worldMatrix[coordX][coordY].objType}`);
-	let objType = worldMatrix[coordX][coordY].objType;
+function botCheckDirection(botGenom, x, y) { // * получаем координаты, возвращаем ответ 
+	// * если пусто = 0, родственник = 1, чужой бот = 2, мясо = 3, дерево = 4, минерал = 5, стена = -1, ошибка 255
+	let objType = worldMatrix[x][y].objType;
 	let res;
 	switch (objType) {
 		case 'space':
 			res = 0;
 			break;
 		case 'bot':
-			let frontBotGenom = worldMatrix[coordX][coordY].genom;
+			let frontBotGenom = worldMatrix[x][y].genom;
 			isRelative(botGenom, frontBotGenom) == 1 ? res = 1 : res = 2;
+        case 'meat':
+            res = 3;
+            break;
 		case 'tree':
-			res = 3;
+			res = 4;
 			break;
 		case 'mineral':
-			res = 4;
+			res = 5;
 			break;
 		case 'wall':
 			res = -1;
@@ -425,7 +539,7 @@ function treeMakeChild() {
         newX,
         newY;
     let genusTypes = ['grass', 'bush', 'tree'];
-    let d = genusTypes.indexOf(this.genus) + 2;
+    let d = genusTypes.indexOf(this.genus) + 2; // d = 2, 3, 4
     for (let index = 15; index--; ) {
         let dx = getRandomInt(-d, d),
             dy = getRandomInt(-d, d);
@@ -479,6 +593,17 @@ function checkOwnParamLvl(obj, paramType = 'energy') {
 	}
 }
 
+/* Бот проверяет достаточно ли ему энергии, чтобы двигаться? */
+function checkEnergyForMove(obj, moveCost) {
+	if (moveCost != undefined) {
+		let e = obj['energy'][0];
+        return e > moveCost ? true : false;
+		    
+	} else {
+		return false;
+	}
+}
+
 /* Увеличиваем возраст объекта */
 function incrementAge() {
     if (this.age[0] < this.age[1]) {
@@ -511,7 +636,7 @@ function emptySpaceGenerator(worldObj) {
 }
 
 /* Возвращает геном (массив длиной 16 из случайных чисел от 0 до GENS) */
-function randomGenomGenerator(genomLength = 16, genomLowAdr = 0, genomHighAdr = GENS) {
+function randomGenomGenerator(genomLength = GENOM_LENGTH, genomLowAdr = 0, genomHighAdr = GENS) {
 	let GENOM = [];
 	for (let x = genomLength; x--;) {
 		GENOM.push(getRandomInt(genomLowAdr, genomHighAdr));
@@ -635,8 +760,8 @@ function createBotsAtRandom(count, color = 'gray', opt = 'random', genom = [0,1,
 	
         let x, y, e, m;
 
-        e = 256;
-        m = 64;
+        e = getRandomInt(128, 256);
+        m = getRandomInt(32, 64);
 
         if (worldEnergy >= (e + m * 4)) {
             x = getRandomInt(1, world_width - 2);
@@ -717,12 +842,36 @@ timerId = setTimeout(function tick() {
 	}
 }, 500);
 
+const colors = [
+    'rgb(255, 32, 32)',// 0 - Красный (светлый)
+    'rgb(255, 69,  0)',// 1 - Красно-оранжевый
+    'rgb(255,165,  0)',// 2 - Оранжевый
+    'rgb(255,255,  0)',// 3 - Желтый
+    'rgb(127,255,  0)',// 4 - Желто-зеленый (кислотный зеленый)
+    'rgb(  0,255,  0)',// 5 - Лаймовый зеленый
+    'rgb(128,128, 64)',// 6 - Оливковый
+    'rgb(  0,128,  0)',// 7 - Зеленый
+    'rgb(127,255,212)',// 8 - Аквамарин
+    'rgb(  0,255,255)',// 9 - Голубой (морская волна)
+    'rgb( 30,144,255)',// 10 - Темно-голубой (dodger blue)
+    'rgb(  0,  0,255)',// 11 - Синий
+    'rgb(255,  0,255)',// 12 - Розовый (magenta)
+    'rgb(255, 20,147)',// 13 - Насыщенный розовый
+    'rgb(148,  0,211)',// 14 - Фиолетовый
+    'rgb(255,255,240)',// 15 - Кость
+    'rgb(244,164, 96)',// 16 - Светло-коричневый
+    'rgb(139, 69, 19)',// 17 - Темно-коричневый
+    'rgb(  0,  0,  0)',// 18 - Черный
+    'rgb(255,255,255)',// 19 - Белый
+];
+
+
 const treeFactory = new TreeFactory();
 emptySpaceGenerator(worldMatrix);
 createTreesAtRandom(5, 'tree');
 createTreesAtRandom(6, 'bush');
-createTreesAtRandom(1, 'grass');
-createBotsAtRandom(5, 'blue', 'random');
-createBotsAtRandom(5, 'red', 'random');
+createTreesAtRandom(3, 'grass');
+createBotsAtRandom(5, colors[8], 'random');
+createBotsAtRandom(5, colors[10], 'random');
 // console.log(worldEnergy);
 animate();
