@@ -38,7 +38,7 @@ class Bot {
         this.color = color;
         this.direction = 1;
 		this.flagAttacked = [0,0]; // позиция 0 - в текущем ходе, 1я - в предыдущем; 1-8 - направление, откуда атакаван или 0 - не атакован
-		this.flagSleeping = 0;
+		this.flagSleeping = 0; // * 1-10 спит, 0 не спит
 		this.flagHungry = 0;
 		this.flagMoved = 0;
 		this.flagAlive = 1;
@@ -46,12 +46,11 @@ class Bot {
 		this.minerals = [0,256];
 		this.speed = 10;
 		this.genom = [];
-		this.eat = [0,0,0,0];   // кушает 0 - растения, 1 - других ботов, 2 - мясо, 3 - минералы
+		this.eatings = [0,0,0,0];   // кушает 0 - растения, 1 - других ботов, 2 - мясо, 3 - минералы
     }
 /* Метод генерации рандомного генома */
     generateRandomGenom() {
         this.genom = randomGenomGenerator();
-        // console.log(this.genom);
     }
 /* Метод отрисовки бота на холсте */
     draw() {
@@ -65,6 +64,10 @@ class Bot {
 /* Метод перемещения в направлении взгляда */    
     move() {
         let moveSpeed = setMoveSpeed(this);
+        // moveSpeed == 0 ? console.log(`bot at pos  ${this.x}:${this.y} have speed 0`) : false ;
+        // this.flagSleeping == 0 ? console.log(`bot at pos  ${this.x}:${this.y} have SF = 0`) : false ;
+        // this.direction == 0 ? console.log(`bot at pos  ${this.x}:${this.y} have direction = 0`): false ;
+        // console.log(`bot at pos  ${this.x}:${this.y} has energy = ${this.energy}`);
         checkEnergyForMove(this, moveSpeed) ? botMove(this, moveSpeed) : botSleep(this);
     }
 /* Метод изменения направления взгляда */    
@@ -73,7 +76,19 @@ class Bot {
     }
 /* Метод поедания объекта, находящегося спереди в направлении взгляда */   
     eat() {
-        botEatFrontObject();
+        botEatFrontObject(this);
+    }
+/* Метод проверки бота - жив ли он? */   
+    isAlive() {
+        checkIsAlive(this);
+        if (this.flagAlive == 0) {
+            worldEnergy += this.energy[0] + 4 * this.minerals[0];
+            worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+        }
+    }
+/* Метод обработки сна */
+    isSleeping() {
+        sleepingMechanics(this);
     }
 /* Метод переводит флаг движения в состояние 0 */
     clearMoveParams() {
@@ -86,7 +101,7 @@ function setMoveSpeed(botObj) {
         mLvl = checkOwnParamLvl(botObj, 'minerals');
     return (botObj.direction % 2 == 1) ?
         10 - eLvl +  Math.ceil(mLvl / 2) :
-        Math.ceil(1.41 * (10 - eLvl +  Math.ceil(mLvl / 2)));   // шаг по диагонали требует в 1.41 раз больше энергии
+        Math.ceil(1.41 * (10 - eLvl +  (mLvl / 2)));   // шаг по диагонали требует в 1.41 раз больше энергии
 }
 
 function botMove(botObj, moveSpeed) {
@@ -115,16 +130,16 @@ function botEatFrontObject(botObj) {
     if ((frontCoords != -1) && (botObj.flagMoved != 1)) {
         let bx = frontCoords[0],
             by = frontCoords[1];
-        let frontObj = botCheckDirection(botObj.genom, bx, by);
+        let frontObjType = botCheckDirection(botObj.genom, bx, by);
         // * если пусто = 0, родственник = 1, чужой бот = 2, мясо = 3, дерево = 4, минерал = 5, стена = -1, ошибка 255
-        switch (frontObj) {
+        switch (frontObjType) {
             // * группируем кейсы 1-5
             case 1:
             case 2:
             case 3:
             case 4:
             case 5:
-                eatFromCoords(botObj, bx, by)
+                eatFromCoords(botObj, bx, by);
                 break;
         
             default:
@@ -135,67 +150,134 @@ function botEatFrontObject(botObj) {
 
 function eatFromCoords(botObj, x, y) {
     let frontObj = worldMatrix[x][y],
-        frontType = frontObj.type,
+        frontType = frontObj.objType,
         energyLvl = checkOwnParamLvl(botObj, 'energy'),
         multiplier = 1;
-    if (flagHungry == 1) {
-        multiplier = 2.5;
-    }
     if (energyLvl <= 2) {
         botObj.flagHungry = 1;
     }
+    if (botObj.flagHungry == 1) {
+        multiplier = 2.5;
+    }
     switch (frontType) {
         case 'bot':
-            botEatBot(botObj, frontObj);
+            botEatBot(botObj, frontObj, multiplier);
+            console.log(`try to eat bot at pos ${frontObj.x}:${frontObj.y}`);
             break;
         case 'tree':
-            botEatTree(botObj, frontObj);
+            botEatTree(botObj, frontObj, multiplier);
+            console.log(`try to eat tree at pos ${frontObj.x}:${frontObj.y}`);
             break;
         case 'mineral':
-            botEatMineral(botObj, frontObj);
+            botEatMineral(botObj, frontObj, multiplier);
+            console.log(`try to eat mineral`);
             break;
         default:
             break;
     }
 }
 
-// ! ToDo: Дописать эту функцию + передавать мультипликатор
-function botEatBot(botObj, frontObj) {
-    let ae = botObj.energy[0],
-        am = botObj.minerals[0],
-        be = frontObj.energy[0],
-        bm = frontObj.minerals[0],
-        chanceToWin = getRandomInt(0, 100);
-    if (bm > am) { // * если атакуемый бот "толще"
-        chanceToWin > 80 ?
-            true : // * откусили (20% шанс)
-            false ; // * не откусили (80% шанс)
+// ! ToDo: Дописать эту функцию - случай, когда бот не смог победить
+function botEatBot(botObj, frontObj, multiplier) {
+    let aMinerals = botObj.minerals[0],
+        bMinerals = frontObj.minerals[0],
+        chanceToWin = getRandomInt(1, 100);
+        // alert(`chanceToWin is ${chanceToWin}`);
+    if (bMinerals > aMinerals) { // * если атакуемый бот "толще" по минералам
+        chanceToWin > 0 ?
+            botWin(botObj, frontObj, multiplier) : // * откусили (20% шанс)
+            false ; // * не откусили (80% шанс) потратили свою энергию, потратили свои минералы и уменьшили минералы атакуемого
     } else {
-        chanceToWin > 20 ?
-            true : // * откусили (80% шанс)
+        chanceToWin > 0 ?
+            botWin(botObj, frontObj, multiplier) : // * откусили (80% шанс)
             false ; // * не откусили (20% шанс)
     }
 }
 
-function botEatTree(params) {
-    
+/* Функция победы в бою - бот откусывает часть энергии и минералов */
+function botWin(botObj, frontObj, multiplier = 1) {
+    let aEnergy = botObj.energy[0],
+        aMinerals = botObj.minerals[0],
+        bEnergy = frontObj.energy[0],
+        bMinerals = frontObj.minerals[0],
+        oneBite = 80;
+    multiplier * oneBite >= bEnergy ? oneBite = bEnergy : oneBite *= multiplier ; // * не можем съесть больше, чем у бота есть энергии
+    oneBite + aEnergy > botObj.energy[1] ? oneBite = botObj.energy[1] - aEnergy : false ; // * не можем съесть больше, чем вмещается
+    botObj.energy[0] += oneBite;
+    frontObj.energy[0] -= oneBite;
+    Math.ceil(oneBite / 5) >= bMinerals ? oneBite = bMinerals : oneBite = Math.ceil(oneBite / 5) ; // * бот отъедает от другого бота в 5 раз меньше минералов, чем энергии 
+    oneBite + aMinerals > botObj.minerals[1] ? oneBite = botObj.minerals[1] - aMinerals : false ;
+    botObj.minerals[0] += oneBite;
+    frontObj.minerals[0] -= oneBite;
+    checkIsAlive(frontObj);
+    // ! ToDo: переписать на наследование цвета, в зависимости от питания предков
+    botObj.color = colors[1]; // * бот краснеет, если питается мясом
+}
+
+function checkIsAlive(obj) {
+    if (obj.objType == 'bot') {
+        if ((obj.energy[0] <= 0) || (obj.minerals[0] <= 0)) { // * бот не может жить, если у него нет энергии или минералов ака костей
+            obj.flagAlive = 0;
+            obj.color = 'gray';
+        }
+    }
+}
+
+function sleepingMechanics(botObj) {
+    botObj.flagSleeping != 0 ? botObj.flagSleeping += 1 : false ;
+    if (botObj.flagSleeping >= 2) {
+        botDecEnergy(botObj, 1);
+        botObj.flagSleeping = 1;
+    } 
+}
+
+function incParam(param, increment = 1) {
+    increment >= 1 ? param += increment : ++param ;
+}
+
+function botEatTree(botObj, frontObj, multiplier) {
+    let aEnergy = botObj.energy[0],
+        aMinerals = botObj.minerals[0],
+        bEnergy = frontObj.energy[0],
+        bMinerals = frontObj.minerals[0],
+        oneBite = 60;
+    multiplier * oneBite >= bEnergy ? oneBite = bEnergy : oneBite *= multiplier ; // * не можем съесть больше, чем у бота есть энергии
+    oneBite + aEnergy > botObj.energy[1] ? oneBite = botObj.energy[1] - aEnergy : false ; // * не можем съесть больше, чем вмещается
+    botObj.energy[0] += oneBite;
+    // console.log(`aEnergy is ${aEnergy}`);
+    // console.log(`botObj e = ${botObj.energy[0]}`);
+    frontObj.energy[0] -= oneBite;
+    Math.ceil(oneBite / 4) >= bMinerals ? oneBite = bMinerals : oneBite = Math.ceil(oneBite / 4) ; // * бот отъедает от дерева в 4 раз меньше минералов, чем энергии 
+    oneBite + aMinerals > botObj.minerals[1] ? oneBite = botObj.minerals[1] - aMinerals : false ;
+    botObj.minerals[0] += oneBite;
+    frontObj.minerals[0] -= oneBite;
+    checkIsAlive(frontObj);
+    // ! ToDo: переписать на наследование цвета, в зависимости от питания предков
+    botObj.color = colors[6]; // * бот зеленеет, если питается мясом
 }
 
 function botEatMineral(params) {
     
 }
 
+// ! ToDo: Добавить механику сна: убавлять 1 ед энергии раз в 10 ходов, - чтобы не было бессмертных сновидцев
 function botSleep(botObj) {
-    let ax = botObj.x,
-        ay = botObj.y;
-    worldMatrix[ax][ay].direction = 0;
+    // let ax = botObj.x,
+    //     ay = botObj.y;
+    botObj.direction = 0;
+    botObj.flagSleeping = 1;
 }
 
 function botDecEnergy(botObj, decrement) {
-    botObj.energy[0] -= decrement;
-    worldEnergy += decrement;
+    if (botObj.energy[0] >= decrement) {
+        botObj.energy[0] -= decrement;
+        worldEnergy += decrement;
+    } else {
+        checkIsAlive(botObj);
+    }
 }
 
+// ! ToDo: Добавить фотосинтез в набор методов бота
 function photosynthesis(obj) {
     if (worldEnergy >= 14) {
         obj.energy[0] += 14;
@@ -358,6 +440,16 @@ function botCheckDirection(botGenom, x, y) { // * получаем коорди�
 	return res;
 }
 
+/* Бот проверяет достаточно ли ему энергии, чтобы двигаться? */
+function checkEnergyForMove(obj, moveCost) {
+	if (moveCost != undefined) {
+		let e = obj['energy'][0];
+        return e > moveCost ? true : false;
+	} else {
+		return false;
+	}
+}
+
 /* Проверяем количество различий между геномами ботов (проверка на родственность) */
 function isRelative(a, b) { // передаем геномы ботов
 	let res = -1;
@@ -481,7 +573,6 @@ function treeGrowth() {
     }
     let x = this.x, 
         y = this.y;
-    // console.log(`${this.genus} at ${x}:${y} has grow speed: ${growthSpeed}`);
     // ! ToDo: Этот кусок можно явно переписать как-то красивее
     e = worldMatrix[x][y].energy;
     m = worldMatrix[x][y].minerals;
@@ -529,7 +620,6 @@ function treeGrowth() {
             }
         }
     }
-    // console.log(`${this.genus} at ${x}:${y} has now m: ${worldMatrix[x][y].minerals}`);
 }
 
 /* Функция создания потомка дерева в случайной области заданного радиуса */
@@ -553,7 +643,6 @@ function treeMakeChild() {
         newY = parentY + dy;
     
         if ((newX > 0 && newX < world_width - 1) && (newY > 0 && newY < world_heigth - 1)) {
-            // console.log(worldMatrix[newX][newY]);
             if (worldMatrix[newX][newY].objType == 'space') {
                 let temp = Math.round(worldMatrix[parentX][parentY].energy[0] / 2);
                 // createnew(newX, newY, treeGenusType);
@@ -593,23 +682,11 @@ function checkOwnParamLvl(obj, paramType = 'energy') {
 	}
 }
 
-/* Бот проверяет достаточно ли ему энергии, чтобы двигаться? */
-function checkEnergyForMove(obj, moveCost) {
-	if (moveCost != undefined) {
-		let e = obj['energy'][0];
-        return e > moveCost ? true : false;
-		    
-	} else {
-		return false;
-	}
-}
-
 /* Увеличиваем возраст объекта */
 function incrementAge() {
     if (this.age[0] < this.age[1]) {
         this.age[0]++;
     }
-    // console.log(`${this.objType} at ${this.x}:${this.y} has age ${this.age}`);
 }
 
 class Space {
@@ -631,8 +708,6 @@ function emptySpaceGenerator(worldObj) {
 			worldObj[j][i] = new Space();
 		}
 	}
-    // console.log(`0:0 - ${worldObj[0][0].objType}`);
-    // console.log(`14:14 - ${worldObj[14][14].objType}`);
 }
 
 /* Возвращает геном (массив длиной 16 из случайных чисел от 0 до GENS) */
@@ -660,6 +735,17 @@ function create2DArray(rows = 5, columns = 5) {
 		arr[i] = new Array(columns);
 	}
 	return arr;
+}
+
+/* Создаем стену по краю мира */
+function buildTheWorldWall(arr) {
+	for (let i = arr.length-1; i--;) {
+		arr[0][i] = new Wall(); // top border
+ 		arr[i][arr[0].length-1] = new Wall(); // right border
+		arr[arr.length-1][i+1] = new Wall(); // bottom border
+		arr[i+1][0] = new Wall(); // left border
+		
+	}
 }
 
 addEventListener('click', (event) => {
@@ -780,7 +866,6 @@ function createBotsAtRandom(count, color = 'gray', opt = 'random', genom = [0,1,
             } else if (opt == 'define') {
                 worldMatrix[x][y].genom = genom;
             }
-            // console.log(worldMatrix[x][y].genom);
         } else {
             console.log(`not enought energy: ${worldEnergy} of ${e + m * 4} needed`);
             break;
@@ -822,6 +907,9 @@ timerId = setTimeout(function tick() {
             if (j.objType == 'bot') {
                 j.changeDirection();
                 j.move();
+                j.eat();
+                j.isSleeping();
+                j.isAlive();
             }
         });
     });
@@ -868,10 +956,10 @@ const colors = [
 
 const treeFactory = new TreeFactory();
 emptySpaceGenerator(worldMatrix);
+buildTheWorldWall(worldMatrix);
 createTreesAtRandom(5, 'tree');
 createTreesAtRandom(6, 'bush');
 createTreesAtRandom(3, 'grass');
-createBotsAtRandom(5, colors[8], 'random');
-createBotsAtRandom(5, colors[10], 'random');
-// console.log(worldEnergy);
+createBotsAtRandom(50, colors[8], 'random');
+createBotsAtRandom(50, colors[10], 'random');
 animate();
