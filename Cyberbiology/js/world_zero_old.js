@@ -221,34 +221,34 @@ function vmsFunc(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
-            if (elem.objType == 'bot') {
-                if (elem.flagMoved == 0) {
+						if (elem.objType == 'bot') {
+								if (elem.flagMoved == 0) {
 					genomVM(elem, worldObj);
 					if (botCanMakeChild(elem)) {
 						botCreateChild(elem, worldObj)
 					}
 				}
 				elem.age[0] += 1;
-            } else if (elem.objType == 'tree') {
+						} else if (elem.objType == 'tree') {
 				treeVM(elem, worldObj);
 				elem.age[0] += 1;
 				if (elem.age[0] >= elem.age[1]) {
 					treeToMineral(elem, worldObj);
 				}
-            } else if (elem.objType == 'meat') {
+						} else if (elem.objType == 'meat') {
 				meatVM(elem, worldObj);
 				elem.age[0] += 1;
 				if (elem.age[0] >= elem.age[1]) {
 					meatToMineral(elem, worldObj);
 				}
-            } else if (elem.objType == 'mineral') {
+						} else if (elem.objType == 'mineral') {
 				mineralsVM(elem);
 				elem.age[0] += 1;
 				if (elem.age[0] >= elem.age[1]) {
 					mineralToEnergy(elem, worldObj);
 				}
-            } else if (elem.objType == 'space') {
-            }
+						} else if (elem.objType == 'space') {
+						}
 		}
 	}
 }
@@ -258,12 +258,12 @@ function checkSummEnergy(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
-            if (elem.energy != undefined) {
-                fullWorldEnergy += elem.energy[0];
-            }
+						if (elem.energy != undefined) {
+								fullWorldEnergy += elem.energy[0];
+						}
 			if (elem.minerals != undefined) {
-                fullWorldEnergy += (elem.minerals[0] * 4);
-            }
+								fullWorldEnergy += (elem.minerals[0] * 4);
+						}
 		}
 	}
 }
@@ -273,9 +273,9 @@ function clearMoveParams(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
-            if (elem.objType == 'bot') {
-                elem.flagMoved = 0;
-            }
+						if (elem.objType == 'bot') {
+								elem.flagMoved = 0;
+						}
 		}
 	}
 }
@@ -284,10 +284,10 @@ function unshiftFlagAttacked(worldObj) {
 	for(let j = 0; j < worldObj.length; j++) {
 		for(let i = 0; i < worldObj[j].length; i++) {
 			let elem = worldObj[j][i];
-            if (elem.objType == 'bot') {
-                elem.flagAttacked.pop();
+						if (elem.objType == 'bot') {
+								elem.flagAttacked.pop();
 				elem.flagAttacked.unshift(0);
-            }
+						}
 		}
 	}
 }
@@ -541,15 +541,15 @@ function genomRecombinate(botGenom) {
 }
 
 function botMove(coordX, coordY, newX, newY) {
-    if ((worldMatrix[coordX][coordY].objType == 'bot') && (worldMatrix[newX][newY].objType == 'space')) {
-        let temp = worldMatrix[coordX][coordY];
-        temp['posX'] = newX;
-        temp['posY'] = newY;
-        worldMatrix[newX][newY] = temp;
-        worldMatrix[coordX][coordY] = new Space();
-    } else {
-        return false;
-    }
+		if ((worldMatrix[coordX][coordY].objType == 'bot') && (worldMatrix[newX][newY].objType == 'space')) {
+				let temp = worldMatrix[coordX][coordY];
+				temp['posX'] = newX;
+				temp['posY'] = newY;
+				worldMatrix[newX][newY] = temp;
+				worldMatrix[coordX][coordY] = new Space();
+		} else {
+				return false;
+		}
 }
 
 // * Вычисление координат клетки в направлении взгляда бота
