@@ -75,6 +75,10 @@ class Bot {
 	eat() {
 		botEatFrontObject(this);
 	}
+/* Метод получения энергии из окружающего пространства */   
+	getGreenEnergy() {
+		photosynthesis(this);
+	}
 /* Метод проверки бота - жив ли он? */   
 	isAlive() {
 		checkIsAlive(this);
@@ -271,11 +275,11 @@ function botDecEnergy(botObj, decrement) {
 	}
 }
 
-// ! ToDo: Добавить фотосинтез в набор методов бота
-function photosynthesis(obj) {
-	if (worldEnergy >= 14) {
-		obj.energy[0] += 14;
-		worldEnergy -= 14;
+/* Фотосинтез - получение энергии из окружающего пространства */
+function photosynthesis(obj, increment = 14) {
+	if (worldEnergy >= increment) {
+		obj.energy[0] += increment;
+		worldEnergy -= increment;
 	} else if (worldEnergy > 0) {
 		obj.energy[0] += worldEnergy;
 		worldEnergy = 0;
@@ -468,7 +472,7 @@ function isRelative(a, b) { // передаем геномы ботов
 	return res; // -1 разного размера геномы, 0 не родственники, 1 родственники
 }
 
-/* Функция создания потомка дерева в случайной области заданного радиуса */
+/* Функция создания потомка в случайной области заданного радиуса */
 function botMakeChild() {
 	let parentX = this.x,
 		parentY = this.y,
@@ -506,7 +510,7 @@ function botMakeChild() {
 	}
 }
 
-/* Функция проверки деревом, а не пора ли создать потомка? */
+/* Функция проверки ботом, а не пора ли создать потомка? */
 function botCheckMakeChild() {
 	let age = this.age[0],
 		e = checkOwnParamLvl(this, 'energy'),

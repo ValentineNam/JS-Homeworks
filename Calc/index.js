@@ -136,7 +136,7 @@ function useModifiers(eventText) {
 }
 // Основная функция вычисления
 function calculate() {
-	if ((a != '') && (action != '')) {
+	if ((a != '') && (action != '') && b) {
 		switch (action) {
 			case '+':
 			a = (a * 1) + (b * 1);
