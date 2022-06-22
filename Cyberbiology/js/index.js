@@ -819,19 +819,18 @@ addEventListener('click', (event) => {
 function animate() {
 	timerId = requestAnimationFrame(animate);
 	ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGTH);
+	drawElements(worldMatrix);
+	drawGrid(ctx);
+}
 
-	worldMatrix.forEach(i => {
+function drawElements(elements) {
+	elements.forEach(i => {
 		i.forEach(j => {
 			if ((j.objType == 'bot') || (j.objType == 'tree')) {
 				j.draw();
 			}
-			// if (j.objType == 'tree') {
-			//     j.growth();
-			// }
 		});
 	});
-
-	drawGrid(ctx);
 }
 
 function drawGrid(ctx) {
