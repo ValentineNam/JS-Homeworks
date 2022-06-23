@@ -236,7 +236,7 @@ function sleepingMechanics(botObj) {
 }
 
 function incParam(param, increment = 1) {
-	increment >= 1 ? param += increment : ++param ;
+	increment >= 0 ? param += increment : ++param ;
 }
 
 function botEatTree(botObj, frontObj, multiplier) {
@@ -278,10 +278,15 @@ function botDecEnergy(botObj, decrement) {
 
 /* Фотосинтез - получение энергии из окружающего пространства */
 function photosynthesis(obj, increment = 14) {
+	if ((obj.energy[1]-obj.energy[0]) <= increment) {
+		increment = obj.energy[1]-obj.energy[0];
+	}
 	if (worldEnergy >= increment) {
+		// incParam(obj.energy[0], increment); //  Странно, но в этом варианте энергия утекает вникуда...
 		obj.energy[0] += increment;
 		worldEnergy -= increment;
 	} else if (worldEnergy > 0) {
+		// incParam(obj.energy[0], worldEnergy);
 		obj.energy[0] += worldEnergy;
 		worldEnergy = 0;
 	}
