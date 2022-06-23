@@ -934,19 +934,12 @@ function checkSummEnergy() {
 	return sum;
 }
 
-// ! ToDo: отрефакторить этот ад
-timerId = setTimeout(function tick() {
-	console.clear();
-	// console.log(`*******`);
-	console.log(`step ${worldTime}`);
-	console.log(`free energy :${worldEnergy}`);
-	console.log(`full energy :${checkSummEnergy()}`);
-	// console.log(`e = ${worldEnergy} | fe = ${fullWorldEnergy}`);
-	// main(worldMatrix);
-	// render(worldMatrix);
 
+timerId = setTimeout(tick, 500);
+
+function tick() {
+	logger();
 	updateMatrix();
-
 	/* Выставляем флаги перемещения ботов в 0 */
 	worldMatrix.forEach(i => {
 		i.forEach(j => {
@@ -961,7 +954,7 @@ timerId = setTimeout(function tick() {
 	if (worldTime >= STEPS) {
 		clearTimeout(timerId);
 	}
-}, 500);
+}
 
 function updateMatrix() {
 	worldMatrix.forEach(i => {
@@ -984,6 +977,17 @@ function updateMatrix() {
 			}
 		});
 	});
+}
+
+function logger() {
+	console.clear();
+	// console.log(`*******`);
+	console.log(`step ${worldTime}`);
+	console.log(`free energy :${worldEnergy}`);
+	console.log(`full energy :${checkSummEnergy()}`);
+	// console.log(`e = ${worldEnergy} | fe = ${fullWorldEnergy}`);
+	// main(worldMatrix);
+	// render(worldMatrix);
 }
 
 const colors = [
