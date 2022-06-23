@@ -805,8 +805,11 @@ addEventListener('click', (event) => {
 		(y < 0)) {
 		return ;
 	};
+	let tX = Math.floor(x / GRID_SIZE),
+	  	tY = Math.floor(y / GRID_SIZE);
 	console.clear();
-	console.log(`x: ${Math.floor(x / GRID_SIZE)}, y: ${Math.floor(y / GRID_SIZE)}`);
+	console.log(`x: ${tX}, y: ${tY}`);
+	console.log(`Object: ${worldMatrix[tX][tY].objType}`);
 	// const bot = new Bot(x, y, 'red');
 	// bot.draw();
 	// bot.generateRandomGenom();
@@ -931,6 +934,7 @@ function checkSummEnergy() {
 	return sum;
 }
 
+// ! ToDo: отрефакторить этот ад
 timerId = setTimeout(function tick() {
 	console.clear();
 	// console.log(`*******`);
@@ -941,25 +945,7 @@ timerId = setTimeout(function tick() {
 	// main(worldMatrix);
 	// render(worldMatrix);
 
-	worldMatrix.forEach(i => {
-		i.forEach(j => {
-			if ((j.objType == 'bot') || (j.objType == 'tree')) {
-				j.incAge();
-			}
-			if (j.objType == 'tree') {
-				j.growth();
-				j.checkMakeChild();
-			}
-			if (j.objType == 'bot') {
-				j.changeDirection();
-				j.move();
-				j.eat();
-				j.checkMakeChild();
-				j.isSleeping();
-				j.isAlive();
-			}
-		});
-	});
+	updateMatrix();
 
 	/* Выставляем флаги перемещения ботов в 0 */
 	worldMatrix.forEach(i => {
@@ -976,6 +962,29 @@ timerId = setTimeout(function tick() {
 		clearTimeout(timerId);
 	}
 }, 500);
+
+function updateMatrix() {
+	worldMatrix.forEach(i => {
+		i.forEach(j => {
+			if ((j.objType == 'bot') || (j.objType == 'tree')) {
+				j.incAge();
+			}
+			if (j.objType == 'tree') {
+				j.growth();
+				j.checkMakeChild();
+			}
+			if (j.objType == 'bot') {
+				j.changeDirection();
+				j.move();
+				j.eat();
+				j.getGreenEnergy();
+				j.checkMakeChild();
+				j.isSleeping();
+				j.isAlive();
+			}
+		});
+	});
+}
 
 const colors = [
 	'rgb(255, 32, 32)',// 0 - Красный (светлый)
