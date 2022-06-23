@@ -12,6 +12,7 @@ const
 	STEPS = 200;
 
 let render_speed = 1,
+	pause = 0,
 	timerId,
 	world_width = Math.floor(CANVAS_WIDTH / GRID_SIZE),
 	world_heigth = Math.floor(CANVAS_HEIGTH / GRID_SIZE);
@@ -808,6 +809,7 @@ addEventListener('click', (event) => {
 	let tX = Math.floor(x / GRID_SIZE),
 	  	tY = Math.floor(y / GRID_SIZE);
 	console.clear();
+	setPause();
 	console.log(`x: ${tX}, y: ${tY}`);
 	console.log(`Object: ${worldMatrix[tX][tY].objType}`);
 	// const bot = new Bot(x, y, 'red');
@@ -951,8 +953,19 @@ function tick() {
 
 	timerId = setTimeout(tick, 200); // (*)
 	worldTime++;
-	if (worldTime >= STEPS) {
+	if ((worldTime >= STEPS) || (pause == 1)) {
 		clearTimeout(timerId);
+	}
+}
+
+function setPause() {
+	if (pause != 1) {
+		pause = 1;
+		// console.log(`pause`);
+	} else {
+		pause = 0;
+		// console.log(`unpause`);
+		timerId = setTimeout(tick, 200);
 	}
 }
 
