@@ -10,9 +10,9 @@ body {
 /* Style the header */
 .header {
     background-color: #f1f1f1;
-    padding: 30px;
+    padding: 5px;
     text-align: center;
-    font-size: 35px;
+    font-size: 30px;
 }
 
 /* Container for flexboxes */

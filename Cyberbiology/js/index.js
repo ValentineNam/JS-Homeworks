@@ -5,7 +5,7 @@ import { drawTree, drawBush, drawGrass, drawBot } from './draw_models.js';
 const
 	CANVAS_WIDTH = 601,
 	CANVAS_HEIGTH = 601,
-	GRID_SIZE = 200,
+	GRID_SIZE = 150,
 	GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
 	GENS = 11, // количество разных генов
