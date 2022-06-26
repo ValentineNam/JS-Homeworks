@@ -5,7 +5,7 @@ import { drawTree, drawBush, drawGrass, drawBot } from './draw_models.js';
 const
 	CANVAS_WIDTH = 601,
 	CANVAS_HEIGTH = 601,
-	GRID_SIZE = 150,
+	GRID_SIZE = 15,
 	GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
 	GENS = 11, // количество разных генов
@@ -53,6 +53,10 @@ class Bot {
 /* Метод генерации рандомного генома */
 	generateRandomGenom() {
 		this.genom = randomGenomGenerator();
+	}
+/* Метод генерации рандомного генома */
+	mutate() {
+		this.genom = genomMutate(this);
 	}
 /* Метод отрисовки бота на холсте */
 	draw() {
@@ -991,6 +995,7 @@ function updateMatrix() {
 				// j.move();
 				// j.eat();
 				// j.getGreenEnergy();
+				// j.genom = [2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0];
 				genomVM(j);
 				j.checkMakeChild();
 				j.isSleeping();
@@ -1009,15 +1014,20 @@ function genomVM(botObj) {
 			actCounter = 16;
 	let genom = botObj.genom;
 	console.log(`Genom is ${genom}`);
+	console.log(`Direction = ${botObj.direction}`);
 	for (;((breakFlag == 0) && (actCounter > 0) && (flagMoved != 1));) {
 		console.log(`****`);
 		console.log(`Bot at x = ${botObj.x}, y = ${botObj.y} has actCounter = ${actCounter}`);
 		console.log(`genom value at adr ${adr} is ${genom[adr]}`);
 		switch (genom[adr]) {
 			case 0:
+				console.log(`Gen 0 - Мутация случайного гена`);
+				console.log(`Старый геном ${genom}`);
+				botObj.mutate();
+				console.log(`Новый  геном ${genom}`);
 				adr = incAdr(adr);
 				actCounter--;
-				console.log(`Gen 0 - неактивный`);
+				console.log(`Переходим к ячейке ${adr}`);
 				break;
 /* Двигаемся вперед */
 			case 1:
@@ -1180,36 +1190,38 @@ function returnAdrShiftDependOfFrontObj(botObj, adr) {
 	let adrShift = 1,
 			ax = botObj.x,
 			ay = botObj.y,
-			frontCoords = getFrontCellCoordinates(botObj.direction, ax, ay),
-			frontObj = botCheckDirection(botObj, frontCoords[0], frontCoords[1]);
-	switch (frontObj) {
-		case 0: // пусто = 0
-			adrShift = botObj.genom[incAdr(adr, 1)];
-			break;
-		case 1: // родственник = 1
-			adrShift = botObj.genom[incAdr(adr, 2)];
-			break;
-		case 2: // чужой бот = 2
-			adrShift = botObj.genom[incAdr(adr, 3)];
-			break;
-		case 3: // мясо = 3
-			adrShift = botObj.genom[incAdr(adr, 4)];
-			break;
-		case 4: // дерево = 4
-			adrShift = botObj.genom[incAdr(adr, 5)];
-		break;
-		case 5: // минерал = 5
-			adrShift = botObj.genom[incAdr(adr, 6)];
-		break;
-		case -1: // стена = -1
-			adrShift = botObj.genom[incAdr(adr, 7)];
-		break;
-		default:
-			break;
-	}
-
-	console.log(`Объект в клетке x = ${frontCoords[0]}, y = ${frontCoords[1]} ${l1(frontObj)}`);
-	return adrShift;
+			frontCoords = getFrontCellCoordinates(botObj.direction, ax, ay); // ! BUG: Какой-то баг...
+			console.log(`FrontCoords = ${frontCoords}`);
+			if (frontCoords != -1) {
+				let frontObj = botCheckDirection(botObj, frontCoords[0], frontCoords[1]);
+				switch (frontObj) {
+					case 0: // пусто = 0
+						adrShift = botObj.genom[incAdr(adr, 1)];
+						break;
+					case 1: // родственник = 1
+						adrShift = botObj.genom[incAdr(adr, 2)];
+						break;
+					case 2: // чужой бот = 2
+						adrShift = botObj.genom[incAdr(adr, 3)];
+						break;
+					case 3: // мясо = 3
+						adrShift = botObj.genom[incAdr(adr, 4)];
+						break;
+					case 4: // дерево = 4
+						adrShift = botObj.genom[incAdr(adr, 5)];
+					break;
+					case 5: // минерал = 5
+						adrShift = botObj.genom[incAdr(adr, 6)];
+					break;
+					case -1: // стена = -1
+						adrShift = botObj.genom[incAdr(adr, 7)];
+					break;
+					default:
+						break;
+				}
+				console.log(`Объект в клетке x = ${frontCoords[0]}, y = ${frontCoords[1]} ${l1(frontObj)}`);	
+			}
+	return adrShift > 0? adrShift: 1;
 }
 // ! ToDo: выпилить когда не нужна будет
 function l1(frontObj) {
@@ -1219,25 +1231,25 @@ function l1(frontObj) {
 			res = 'пусто значение из ячейки +1';
 			break;
 		case 1:
-			res =  'родич значение из ячейки +2';
+			res = 'родич значение из ячейки +2';
 			break;			
 		case 2:
-			res =  'чужой значение из ячейки +3';
+			res = 'чужой значение из ячейки +3';
 			break;			
 		case 3:
-			res =  'мясо значение из ячейки +4';
+			res = 'мясо значение из ячейки +4';
 			break;
 		case 4:
-			res =  'дерево значение из ячейки +5';
+			res = 'дерево значение из ячейки +5';
 			break;			
 		case 5:
-			res =  'минерал значение из ячейки +6';
+			res = 'минерал значение из ячейки +6';
 			break;
 		case -1:
-			res =  'стена значение из ячейки +7';
+			res = 'стена значение из ячейки +7';
 			break;		
 		default:
-			res =  '???';
+			res = '???';
 			break;
 	}
 	return res;
@@ -1294,6 +1306,17 @@ function returnAdrShiftIfAttacked(botObj, adr) {
 	return adrShift;
 }
 
+/* Мутация в случайном гене */
+function genomMutate(botObj) {
+	let botGenom = botObj.genom;
+	let pos = getRandomInt(0, botGenom.length - 1);
+	let oldGen = botGenom[pos];
+	while (oldGen == botGenom[pos]) {
+		botGenom[pos] = getRandomInt(0, GENS);
+	}
+	return botGenom;
+}
+
 // ! ToDo: добавить функцию в конец каждого хода
 function unshiftFlagAttacked(worldMatrix) {
 	for(let j = 0; j < worldMatrix.length; j++) {
@@ -1344,10 +1367,10 @@ const colors = [
 const treeFactory = new TreeFactory();
 emptySpaceGenerator(worldMatrix);
 buildTheWorldWall(worldMatrix);
-// createTreesAtRandom(5, 'tree');
-// createTreesAtRandom(6, 'bush');
-// createTreesAtRandom(3, 'grass');
-// createBotsAtRandom(50, colors[8], 'random');
-// createBotsAtRandom(50, colors[10], 'random');
+createTreesAtRandom(5, 'tree');
+createTreesAtRandom(6, 'bush');
+createTreesAtRandom(3, 'grass');
+createBotsAtRandom(50, colors[8], 'random');
+createBotsAtRandom(50, colors[10], 'random');
 createBotsAtRandom(1, colors[8], 'random');
 animate();
