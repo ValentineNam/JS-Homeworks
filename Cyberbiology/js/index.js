@@ -5,7 +5,7 @@ import { drawTree, drawBush, drawGrass, drawBot } from './draw_models.js';
 const
 	CANVAS_WIDTH = 601,
 	CANVAS_HEIGTH = 601,
-	GRID_SIZE = 30,
+	GRID_SIZE = 200,
 	GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
 	GENS = 11, // количество разных генов
@@ -58,7 +58,7 @@ class Bot {
 	draw() {
 		let s = GRID_SIZE / 10; // scale
 		let x = this.x * 10,
-			y = this.y * 10;
+				y = this.y * 10;
 		drawBot(ctx, x, y, s, this.color);
 	}
 /* Метод увеличения возраста */
@@ -80,6 +80,10 @@ class Bot {
 	getGreenEnergy() {
 		photosynthesis(this);
 	}
+// /* Метод проверки, кто/что спереди по направлению взгляда */
+// 	botCheckFrontDirection() {
+// 		return changeAdrDependOfFrontObj(this);
+// 	}
 /* Метод проверки бота - жив ли он? */   
 	isAlive() {
 		checkIsAlive(this);
@@ -93,9 +97,9 @@ class Bot {
 		sleepingMechanics(this);
 	}
 /* Метод проверки возможности создания нового бота */    
-	createChild = botMakeChild;
-/* Метод создания нового бота */     
 	checkMakeChild = botCheckMakeChild;
+/* Метод создания нового бота */     
+	createChild = botMakeChild;
 /* Метод переводит флаг движения в состояние 0 */
 	clearMoveParams() {
 		this.flagMoved = 0;
@@ -104,7 +108,7 @@ class Bot {
 
 function setMoveSpeed(botObj) {
 	let eLvl = checkOwnParamLvl(botObj, 'energy'),
-		mLvl = checkOwnParamLvl(botObj, 'minerals');
+			mLvl = checkOwnParamLvl(botObj, 'minerals');
 	return (botObj.direction % 2 == 1) ?
 		10 - eLvl +  Math.ceil(mLvl / 2) :
 		Math.ceil(1.41 * (10 - eLvl +  (mLvl / 2)));   // * шаг по диагонали требует в 1.41 раз больше энергии
@@ -447,9 +451,9 @@ function botCheckDirection(botObj, x, y) { // * получаем координ�
 }
 
 /* Бот проверяет достаточно ли ему энергии, чтобы двигаться? */
-function checkEnergyForMove(obj, moveCost) {
+function checkEnergyForMove(botObj, moveCost) {
 	if (moveCost != undefined) {
-		let e = obj['energy'][0];
+		let e = botObj['energy'][0];
 		return e > moveCost ? true : false;
 	} else {
 		return false;
@@ -686,7 +690,7 @@ function treeMakeChild() {
 	let d = genusTypes.indexOf(this.genus) + 2; // d = 2, 3, 4
 	for (let index = 15; index--; ) {
 		let dx = getRandomInt(-d, d),
-			dy = getRandomInt(-d, d);
+				dy = getRandomInt(-d, d);
 		
 		while ((dx == 0) && (dy == 0)) {
 			dx = getRandomInt(-d, d),
@@ -727,8 +731,8 @@ function treeCheckMakeChild() {
 function checkOwnParamLvl(obj, paramType = 'energy') {
 	if (paramType != undefined) {
 		let param = obj[paramType][0],
-			maxParam = obj[paramType][1],
-			paramLvl = Math.floor(param / maxParam * 10);
+				maxParam = obj[paramType][1],
+				paramLvl = Math.floor(param / maxParam * 10);
 		return paramLvl; // возвращаем уровень от 0 - 10
 	} else {
 		return false;
@@ -966,10 +970,8 @@ function tick() {
 function setPause() {
 	if (pause != 1) {
 		pause = 1;
-		// console.log(`pause`);
 	} else {
 		pause = 0;
-		// console.log(`unpause`);
 		timerId = setTimeout(tick, 200);
 	}
 }
@@ -985,10 +987,11 @@ function updateMatrix() {
 				j.checkMakeChild();
 			}
 			if (j.objType == 'bot') {
-				j.changeDirection();
-				j.move();
-				j.eat();
-				j.getGreenEnergy();
+				// j.changeDirection();
+				// j.move();
+				// j.eat();
+				// j.getGreenEnergy();
+				genomVM(j);
 				j.checkMakeChild();
 				j.isSleeping();
 				j.isAlive();
@@ -997,15 +1000,321 @@ function updateMatrix() {
 	});
 }
 
+function genomVM(botObj) {
+	let adr = 0,
+			breakFlag = 0,
+			flagMoved = botObj.flagMoved,
+			// pointer = null,
+			memory = null,
+			actCounter = 16;
+	let genom = botObj.genom;
+	console.log(`Genom is ${genom}`);
+	for (;((breakFlag == 0) && (actCounter > 0) && (flagMoved != 1));) {
+		console.log(`****`);
+		console.log(`Bot at x = ${botObj.x}, y = ${botObj.y} has actCounter = ${actCounter}`);
+		console.log(`genom value at adr ${adr} is ${genom[adr]}`);
+		switch (genom[adr]) {
+			case 0:
+				adr = incAdr(adr);
+				actCounter--;
+				console.log(`Gen 0 - неактивный`);
+				break;
+/* Двигаемся вперед */
+			case 1:
+				// adr = incAdr(adr);
+				botObj.move();
+				flagMoved = 1;
+				breakFlag = 1;
+				console.log(`Gen 1 - шаг вперед`);
+				console.log(`Прерывающая цикл операция`);
+				break;
+/* Поворачиваемся в случайном направлении */
+			case 2:
+				console.log(`Gen 2 - поворот в случайном направлении`);
+				console.log(`Старое направление ${botObj.direction}`);
+				botObj.changeDirection('random');
+				console.log(`Новое направление ${botObj.direction}`);
+				adr = incAdr(adr);
+				actCounter--;
+				console.log(`Переходим к ячейке ${adr}`);
+				break;
+/* Повернуться (исходя из следующего адреса) */
+			case 3:
+				console.log(`Gen 3 - поворот в зависимости от следующего адреса`);
+				console.log(`Старое направление ${botObj.direction}`);
+				// делим значение в следующей ячейке на 2, если получаем в остатке 0 - то поворот вправо, иначе - влево
+				let x = genom[adr] % 2;
+				console.log(`Значение в следующем адресе genom[${adr}] % 2 = ${x}`);		
+				let spin; 
+				if (x = 0) {
+					spin = 'right'
+				} else {
+					spin = 'left';
+				}
+				console.log(`Совершаем поворот в направлении ${spin}`);
+				botObj.changeDirection(spin);
+				console.log(`Новое направление ${botObj.direction}`);
+				adr = incAdr(adr);
+				actCounter--;
+				console.log(`Переходим к ячейке ${adr}`);
+				break;
+/* Повернуться (взять направление из памяти) */
+			case 4:
+			console.log(`Gen 4 - поворот взять направлении из памяти`);
+			console.log(`Старое направление ${botObj.direction}`);
+			// поворачиваемся в направлении из памяти
+			let i;
+			memory != null ? i = memory : i = -1;
+			if (memory > 0) {
+				for (;((i > 0) && (actCounter > 0)); i--) {
+					botObj.changeDirection('right');
+					actCounter--;
+					console.log(`Поворачиваемся направо на 1 сектор`);
+					console.log(`Новое направление ${botObj.direction}`);
+				}
+			} else {
+				botObj.changeDirection('random');
+				actCounter--;
+				console.log(`Поворачиваемся в случайном направлении`);
+				console.log(`Новое направление ${botObj.direction}`);
+			}
+			adr = incAdr(adr);
+			memory = null;
+			console.log(`Переходим к ячейке ${adr}`);
+			break;
+/* Кушаем объект спереди */
+			case 5:
+				console.log(`Gen 5 - Кушаем объект спереди`);
+				botObj.eat();
+				// adr = incAdr(adr);
+				breakFlag = 1;
+				console.log(`Прерывающая цикл операция`);
+				break;
+/* Фотосинтезировать */
+			case 6:
+				console.log(`Gen 6 - Фотосинтез`);
+				console.log(`Энергия бота до фотосинтеза ${botObj.energy}`);
+				botObj.getGreenEnergy();
+				console.log(`Энергия бота после фотосинтеза ${botObj.energy}`);
+				// adr = incAdr(adr);
+				breakFlag = 1;
+				console.log(`Прерывающая цикл операция`);
+				break;
+/* Проверить, что спереди? */
+			case 7:
+				console.log(`Gen 7 - Проверка объекта спереди с переходом к команде в адресе + целевое значение`);
+				adr = incAdr(adr, returnAdrShiftDependOfFrontObj(botObj, adr));
+				actCounter--;
+				console.log(`Переходим к ячейке ${adr}`);
+				break;
+/* Проверить, голоден ли */
+			case 8:
+				console.log(`Gen 8 - Проверить голоден ли, переход к команде в адресе + целевое значение`);
+				adr = incAdr(adr, returnAdrShiftHunger(botObj, adr));
+				actCounter--;
+				break;
+/* Проверить, атакован ли и положить направление атаки в память */
+			case 9:
+				console.log(`Gen 9 - Проверить атакован ли, положить направление атаки в память`);
+				adr = incAdr(adr);
+				memory = returnLastAttackedDirection(botObj);
+				actCounter--;
+				console.log(`Переходим к ячейке ${adr}`);
+				break;
+/* Проверить, атакован ли и перейти к ячейке из памяти в зависимости от результата +1 не атакован, +2/+3 атакован в прошлом/текущем ходу/ +4 в обоих */
+			case 10:
+				console.log(`Gen 10 - Проверить атакован ли, перейти к команде в адресе в зависимости от результата`);
+				adr = incAdr(adr, returnAdrShiftIfAttacked(botObj, adr));
+				actCounter--;
+				console.log(`Переходим к ячейке ${adr}`);
+				break;
+			default:
+				console.log(`Нерабочий ген`);
+				adr = incAdr(adr);
+				actCounter--
+				console.log(`Переходим к ячейке ${adr}`);
+				break;
+		}
+		// 
+		// actCounter--;
+	}
+}
+
+// мутация
+// идти (вперед)
+// повернуться в случайном направлении
+// повернуться (взять направление взять из следующего адреса)
+// повернуться (взять направление из памяти)
+// есть (спереди)
+// фотосинтез
+// проверить, что спереди?
+// * если пусто = 0, родственник = 1, чужой бот = 2, мясо = 3, дерево = 4, минерал = 5, стена = -1, ошибка 255
+// проверить голоден ли он?
+// проверить атакован ли он? если да - положить направление в "память"
+// 
+
+/* увеличиваем адрес, если утыкаемся в хвост, то идем сначала */
+function incAdr(adr, increment = undefined) {
+	console.log(`incAdr`);
+	console.log(`до ${adr}`);
+	// increment != undefined ? adr += increment : adr++;
+	if (increment != undefined) {
+		adr += increment;
+	} else {
+		adr++;
+	}
+	adr = adr % GENOM_LENGTH;
+	console.log(`после ${adr}`);
+	return adr;
+}
+
+// ! ToDo: пересмотреть область применения этой функции
+/* Вернуть направление, с которого бот аттакован */
+function getAttackedDirection(botObj) {
+	let direction = botObj.flagAttacked[0];
+	return direction;
+}
+
+/* В зависимости от типа объекта спереди берем адрес смещения из соседних адресов */
+function returnAdrShiftDependOfFrontObj(botObj, adr) {
+	let adrShift = 1,
+			ax = botObj.x,
+			ay = botObj.y,
+			frontCoords = getFrontCellCoordinates(botObj.direction, ax, ay),
+			frontObj = botCheckDirection(botObj, frontCoords[0], frontCoords[1]);
+	switch (frontObj) {
+		case 0: // пусто = 0
+			adrShift = botObj.genom[incAdr(adr, 1)];
+			break;
+		case 1: // родственник = 1
+			adrShift = botObj.genom[incAdr(adr, 2)];
+			break;
+		case 2: // чужой бот = 2
+			adrShift = botObj.genom[incAdr(adr, 3)];
+			break;
+		case 3: // мясо = 3
+			adrShift = botObj.genom[incAdr(adr, 4)];
+			break;
+		case 4: // дерево = 4
+			adrShift = botObj.genom[incAdr(adr, 5)];
+		break;
+		case 5: // минерал = 5
+			adrShift = botObj.genom[incAdr(adr, 6)];
+		break;
+		case -1: // стена = -1
+			adrShift = botObj.genom[incAdr(adr, 7)];
+		break;
+		default:
+			break;
+	}
+
+	console.log(`Объект в клетке x = ${frontCoords[0]}, y = ${frontCoords[1]} ${l1(frontObj)}`);
+	return adrShift;
+}
+// ! ToDo: выпилить когда не нужна будет
+function l1(frontObj) {
+	let res;
+	switch (frontObj) {
+		case 0:
+			res = 'пусто значение из ячейки +1';
+			break;
+		case 1:
+			res =  'родич значение из ячейки +2';
+			break;			
+		case 2:
+			res =  'чужой значение из ячейки +3';
+			break;			
+		case 3:
+			res =  'мясо значение из ячейки +4';
+			break;
+		case 4:
+			res =  'дерево значение из ячейки +5';
+			break;			
+		case 5:
+			res =  'минерал значение из ячейки +6';
+			break;
+		case -1:
+			res =  'стена значение из ячейки +7';
+			break;		
+		default:
+			res =  '???';
+			break;
+	}
+	return res;
+}
+
+/* В зависимости от того: голоден или нет, - берем адрес смещения из соседних адресов */
+function returnAdrShiftHunger(botObj, adr) {
+	let adrShift = 1,
+			hungry = botObj.flagHungry,
+			newAdr;
+	switch (hungry) {
+		case 0: // не голоден = 0
+			adrShift = botObj.genom[incAdr(adr, 1)];
+			newAdr = adr+1;
+			break;
+		case 1: // голоден = 1
+			adrShift = botObj.genom[incAdr(adr, 2)];
+			newAdr = adr + 2;
+			break;
+		default:
+			break;
+	}
+	console.log(`Бот ${hungry = 0 ? 'не голоден' : 'голоден'}, адрес смещения берем из genom[${newAdr}] = ${adrShift}`);
+	return adrShift;
+}
+
+/* В зависимости от того: атакован или нет - возвращаем значение направления, с которого атакован */
+function returnLastAttackedDirection(botObj) {
+	let attackedNow = botObj.flagAttacked[0],
+			attackedLastTurn = botObj.flagAttacked[1];
+	if (attackedNow > 0) {
+		return attackedNow;
+	} else if (attackedLastTurn > 0) {
+		return attackedLastTurn;
+	} else {
+		return null;
+	}
+}
+
+function returnAdrShiftIfAttacked(botObj, adr) {
+	let adrShift = 0,
+			newAdr = 1;
+	// не атакован - 00
+	// был атакован в прошлом ходу - 01
+	// атакован сейчас - 10
+	// атакован и сейчас и в прошлом ходу 11
+	if (botObj.flagAttacked[1] > 0) {
+		newAdr += 1;
+	}
+	if (botObj.flagAttacked[0] > 1) {
+		newAdr += 2;
+	}
+	adrShift = botObj.genom[adr+newAdr];
+	return adrShift;
+}
+
+// ! ToDo: добавить функцию в конец каждого хода
+function unshiftFlagAttacked(worldMatrix) {
+	for(let j = 0; j < worldMatrix.length; j++) {
+		for(let i = 0; i < worldMatrix[j].length; i++) {
+			let elem = worldMatrix[j][i];
+			if (elem.objType == 'bot') {
+				elem.flagAttacked.pop();
+				elem.flagAttacked.unshift(0);
+			}
+		}
+	}
+}
+
+// ! Todo: добавить изменение флага атакован если получает урон от другого бота
+
 function logger() {
 	console.clear();
 	// console.log(`*******`);
 	console.log(`step ${worldTime}`);
 	console.log(`free energy :${worldEnergy}`);
 	console.log(`full energy :${checkSummEnergy()}`);
-	// console.log(`e = ${worldEnergy} | fe = ${fullWorldEnergy}`);
-	// main(worldMatrix);
-	// render(worldMatrix);
 }
 
 const colors = [
@@ -1035,9 +1344,10 @@ const colors = [
 const treeFactory = new TreeFactory();
 emptySpaceGenerator(worldMatrix);
 buildTheWorldWall(worldMatrix);
-createTreesAtRandom(5, 'tree');
-createTreesAtRandom(6, 'bush');
-createTreesAtRandom(3, 'grass');
-createBotsAtRandom(50, colors[8], 'random');
-createBotsAtRandom(50, colors[10], 'random');
+// createTreesAtRandom(5, 'tree');
+// createTreesAtRandom(6, 'bush');
+// createTreesAtRandom(3, 'grass');
+// createBotsAtRandom(50, colors[8], 'random');
+// createBotsAtRandom(50, colors[10], 'random');
+createBotsAtRandom(1, colors[8], 'random');
 animate();
