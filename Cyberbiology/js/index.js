@@ -1303,6 +1303,13 @@ function tick() {
 	if ((worldTime >= STEPS) || (pause == 1)) {
 		clearTimeout(timerId);
 	}
+	updateTurnCounter();
+}
+
+/* Отрисовываем номер текущего шага в боковом меню */
+function updateTurnCounter() {
+	const turn_counter = document.getElementById('turn-counter');
+	turn_counter.value = worldTime;
 }
 
 function setPause() {
