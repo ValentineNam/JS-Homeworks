@@ -1314,9 +1314,11 @@ function setPause() {
 	}
 }
 
+/* Добавляем обработчик нажатия кнопку Play */
 const btn = document.querySelector('.play-button');
 btn.addEventListener('click', setPause);
 
+/* Добавляем обработчик изменения пикера скорости отрисовки */
 const render_speed_picker = document.getElementById('render-speed-picker'),
 			render_speed_output = document.getElementById('render-speed-output');
 render_speed_picker.addEventListener('change', () => {
@@ -1325,6 +1327,7 @@ render_speed_picker.addEventListener('change', () => {
 	// console.log(`Render speed is: ${render_speed}`);
 });
 
+/* Добавляем обработчик нажатия на кнопку Generate */
 const generate_button = document.getElementById('generate-button');
 generate_button.addEventListener('click', generateFromParams);
 
@@ -1343,6 +1346,15 @@ function generateFromParams() {
 	grass = document.getElementById('grass-count').value;
 	createTreesAtRandom(grass, 'grass');
 }
+
+/* Добавляем обработчик нажатия на кнопку Clear */
+const clear_button = document.getElementById('clear-button');
+clear_button.addEventListener('click', clearTheWorld);
+
+function clearTheWorld() {
+	emptySpaceGenerator(worldMatrix);
+}
+
 
 function updateMatrix() {
 	worldMatrix.forEach(i => {
@@ -1404,10 +1416,10 @@ const colors = [
 const treeFactory = new TreeFactory();
 emptySpaceGenerator(worldMatrix);
 buildTheWorldWall(worldMatrix);
-createTreesAtRandom(5, 'tree');
-createTreesAtRandom(6, 'bush');
-createTreesAtRandom(3, 'grass');
-createBotsAtRandom(50, colors[8][0], 'random');
-createBotsAtRandom(50, colors[10][0], 'random');
-createBotsAtRandom(1, colors[8][0], 'random');
+// createTreesAtRandom(5, 'tree');
+// createTreesAtRandom(6, 'bush');
+// createTreesAtRandom(3, 'grass');
+// createBotsAtRandom(50, colors[8][0], 'random');
+// createBotsAtRandom(50, colors[10][0], 'random');
+// createBotsAtRandom(1, colors[8][0], 'random');
 animate();
