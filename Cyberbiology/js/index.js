@@ -1308,9 +1308,11 @@ function tick() {
 function setPause() {
 	if (pause != 1) {
 		pause = 1;
+		document.getElementById("play").src = "images/play_button.jpg";
 	} else {
 		pause = 0;
 		timerId = setTimeout(tick, 200);
+		document.getElementById("play").src = "images/pause_button.jpg";
 	}
 }
 
