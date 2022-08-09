@@ -1,18 +1,21 @@
 'use strict'
 
 import { drawTree, drawBush, drawGrass, drawBot } from './draw_models.js';
+// import { addListeners, setPause } from './utils.js';
+
+// addListeners();
 
 const
-	CANVAS_WIDTH = 601,
-	CANVAS_HEIGTH = 601,
+	CANVAS_WIDTH = 781,
+	CANVAS_HEIGTH = 781,
 	GRID_SIZE = 15,
 	GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
 	GENS = 11, // количество разных генов
-	STEPS = 200;
+	STEPS = 120;
 
 let render_speed = 1,
-	pause = 0,
+	pause = 1,
 	timerId,
 	world_width = Math.floor(CANVAS_WIDTH / GRID_SIZE),
 	world_heigth = Math.floor(CANVAS_HEIGTH / GRID_SIZE);
@@ -54,7 +57,7 @@ class Bot {
 	generateRandomGenom() {
 		this.genom = randomGenomGenerator();
 	}
-/* Метод генерации рандомного генома */
+/* Метод мутации генома */
 	mutate() {
 		this.genom = genomMutate(this);
 	}
@@ -187,7 +190,7 @@ function eatFromCoords(botObj, x, y) {
 			break;
 	}
 }
-
+ 
 // ! ToDo: Дописать эту функцию - случай, когда бот не смог победить
 function botEatBot(botObj, frontObj, multiplier) {
 	let aMinerals = botObj.minerals[0],
@@ -221,7 +224,7 @@ function botWin(botObj, frontObj, multiplier = 1) {
 	frontObj.minerals[0] -= oneBite;
 	checkIsAlive(frontObj);
 	// ! ToDo: переписать на наследование цвета, в зависимости от питания предков
-	botObj.color = colors[1]; // * бот краснеет, если питается мясом
+	botObj.color = colors[1][0]; // * бот краснеет, если питается мясом
 }
 
 function checkIsAlive(obj) {
@@ -263,7 +266,7 @@ function botEatTree(botObj, frontObj, multiplier) {
 	frontObj.minerals[0] -= oneBite;
 	checkIsAlive(frontObj);
 	// ! ToDo: переписать на наследование цвета, в зависимости от питания предков
-	botObj.color = colors[6]; // * бот зеленеет, если питается мясом
+	botObj.color = colors[6][0]; // * бот зеленеет, если питается мясом
 }
 
 function botEatMineral(params) {
@@ -510,7 +513,7 @@ function botMakeChild() {
 				let temp = Math.round(worldMatrix[parentX][parentY].energy[0] / 2);
 // ! ToDo: дописать функцию определения цвета, в зависимости от питания и передавать этот цвет в конструктор нового бота
 // ! ToDo: по-мимо цвета, нужно передавать еще геномы новым ботам с шансом мутации одного из параметров
-				worldMatrix[newX][newY] = new Bot(newX, newY, colors[5]);
+				worldMatrix[newX][newY] = new Bot(newX, newY, colors[5][0]);
 				worldMatrix[newX][newY].energy[0] = temp;
 				worldMatrix[parentX][parentY].energy[0] = worldMatrix[parentX][parentY].energy[0] - temp;
 				temp = Math.round(worldMatrix[parentX][parentY].minerals[0] / 2);
@@ -949,62 +952,6 @@ function checkSummEnergy() {
 	return sum;
 }
 
-
-timerId = setTimeout(tick, 500);
-
-function tick() {
-	logger();
-	updateMatrix();
-	/* Выставляем флаги перемещения ботов в 0 */
-	worldMatrix.forEach(i => {
-		i.forEach(j => {
-			if (j.objType == 'bot') {
-				j.clearMoveParams();
-			}
-		});
-	});
-
-	timerId = setTimeout(tick, 200); // (*)
-	worldTime++;
-	if ((worldTime >= STEPS) || (pause == 1)) {
-		clearTimeout(timerId);
-	}
-}
-
-function setPause() {
-	if (pause != 1) {
-		pause = 1;
-	} else {
-		pause = 0;
-		timerId = setTimeout(tick, 200);
-	}
-}
-
-function updateMatrix() {
-	worldMatrix.forEach(i => {
-		i.forEach(j => {
-			if ((j.objType == 'bot') || (j.objType == 'tree')) {
-				j.incAge();
-			}
-			if (j.objType == 'tree') {
-				j.growth();
-				j.checkMakeChild();
-			}
-			if (j.objType == 'bot') {
-				// j.changeDirection();
-				// j.move();
-				// j.eat();
-				// j.getGreenEnergy();
-				// j.genom = [2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0];
-				genomVM(j);
-				j.checkMakeChild();
-				j.isSleeping();
-				j.isAlive();
-			}
-		});
-	});
-}
-
 function genomVM(botObj) {
 	let adr = 0,
 			breakFlag = 0,
@@ -1261,9 +1208,10 @@ function returnAdrShiftHunger(botObj, adr) {
 			hungry = botObj.flagHungry,
 			newAdr;
 	switch (hungry) {
+		// ! ToDo: Просмотреть код внимательно, кажется что он делает не то, что задумано
 		case 0: // не голоден = 0
 			adrShift = botObj.genom[incAdr(adr, 1)];
-			newAdr = adr+1;
+			newAdr = adr + 1;
 			break;
 		case 1: // голоден = 1
 			adrShift = botObj.genom[incAdr(adr, 2)];
@@ -1330,37 +1278,111 @@ function unshiftFlagAttacked(worldMatrix) {
 	}
 }
 
-// ! Todo: добавить изменение флага атакован если получает урон от другого бота
+// ! ToDo: добавить изменение флага атакован если получает урон от другого бота
+
+// ! ToDo: добавить ген прибавки максимальной продолжительности жизни +2 за раз
+
+/* ############################################## */
+
+// timerId = setTimeout(tick, 500);
+
+function tick() {
+	logger();
+	updateMatrix();
+	/* Выставляем флаги перемещения ботов в 0 */
+	worldMatrix.forEach(i => {
+		i.forEach(j => {
+			if (j.objType == 'bot') {
+				j.clearMoveParams();
+			}
+		});
+	});
+
+	timerId = setTimeout(tick, 200); // (*)
+	worldTime++;
+	if ((worldTime >= STEPS) || (pause == 1)) {
+		clearTimeout(timerId);
+	}
+}
+
+function setPause() {
+	if (pause != 1) {
+		pause = 1;
+	} else {
+		pause = 0;
+		timerId = setTimeout(tick, 200);
+	}
+}
+
+const btn = document.querySelector('.play-button');
+btn.addEventListener('click', setPause);
+
+const render_speed_picker = document.getElementById('render-speed-picker'),
+			render_speed_output = document.getElementById('render-speed-output');
+render_speed_picker.addEventListener('change', () => {
+	render_speed_output.value = render_speed_picker.value;
+	render_speed = render_speed_picker.value;
+	// console.log(`Render speed is: ${render_speed}`);
+});
+
+	// 	console.clear();
+	// 	console.log(`Пауза?`);
+	// });
+
+function updateMatrix() {
+	worldMatrix.forEach(i => {
+		i.forEach(j => {
+			if ((j.objType == 'bot') || (j.objType == 'tree')) {
+				j.incAge();
+			}
+			if (j.objType == 'tree') {
+				j.growth();
+				j.checkMakeChild();
+			}
+			if (j.objType == 'bot') {
+				// j.changeDirection();
+				// j.move();
+				// j.eat();
+				// j.getGreenEnergy();
+				// j.genom = [2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0];
+				genomVM(j);
+				j.checkMakeChild();
+				j.isSleeping();
+				j.isAlive();
+			}
+		});
+	});
+	unshiftFlagAttacked(worldMatrix);
+}
 
 function logger() {
 	console.clear();
-	// console.log(`*******`);
 	console.log(`step ${worldTime}`);
 	console.log(`free energy :${worldEnergy}`);
 	console.log(`full energy :${checkSummEnergy()}`);
 }
 
 const colors = [
-	'rgb(255, 32, 32)',// 0 - Красный (светлый)
-	'rgb(255, 69,  0)',// 1 - Красно-оранжевый
-	'rgb(255,165,  0)',// 2 - Оранжевый
-	'rgb(255,255,  0)',// 3 - Желтый
-	'rgb(127,255,  0)',// 4 - Желто-зеленый (кислотный зеленый)
-	'rgb(  0,255,  0)',// 5 - Лаймовый зеленый
-	'rgb(128,128, 64)',// 6 - Оливковый
-	'rgb(  0,128,  0)',// 7 - Зеленый
-	'rgb(127,255,212)',// 8 - Аквамарин
-	'rgb(  0,255,255)',// 9 - Голубой (морская волна)
-	'rgb( 30,144,255)',// 10 - Темно-голубой (dodger blue)
-	'rgb(  0,  0,255)',// 11 - Синий
-	'rgb(255,  0,255)',// 12 - Розовый (magenta)
-	'rgb(255, 20,147)',// 13 - Насыщенный розовый
-	'rgb(148,  0,211)',// 14 - Фиолетовый
-	'rgb(255,255,240)',// 15 - Кость
-	'rgb(244,164, 96)',// 16 - Светло-коричневый
-	'rgb(139, 69, 19)',// 17 - Темно-коричневый
-	'rgb(  0,  0,  0)',// 18 - Черный
-	'rgb(255,255,255)',// 19 - Белый
+	['rgb(255, 32, 32)', 'Red'],// 0 - Красный (светлый)
+	['rgb(255, 69,  0)', 'DarkOrange'],// 1 - Красно-оранжевый
+	['rgb(255,165,  0)', 'Orange'],// 2 - Оранжевый
+	['rgb(255,255,  0)', 'Yellow'],// 3 - Желтый
+	['rgb(127,255,  0)', 'Chartreuse'],// 4 - Желто-зеленый (кислотный зеленый)
+	['rgb(  0,255,  0)', 'Lime'],// 5 - Лаймовый зеленый
+	['rgb(128,128, 64)', 'Olive'],// 6 - Оливковый
+	['rgb(  0,128,  0)', 'Green'],// 7 - Зеленый
+	['rgb(127,255,212)', 'Aquamarine'],// 8 - Аквамарин
+	['rgb(  0,255,255)', 'Aqua'],// 9 - Голубой (морская волна)
+	['rgb( 30,144,255)', 'DodgerBlue'],// 10 - Темно-голубой (dodger blue)
+	['rgb(  0,  0,255)', 'Blue'],// 11 - Синий
+	['rgb(255,  0,255)', 'Fuchsia'],// 12 - Розовый (magenta)
+	['rgb(255, 20,147)', 'DeepPink'],// 13 - Насыщенный розовый
+	['rgb(148,  0,211)', 'DarkViolet'],// 14 - Фиолетовый
+	['rgb(255,255,240)', 'Ivory'],// 15 - Кость
+	['rgb(244,164, 96)', 'SandyBrown'],// 16 - Светло-коричневый
+	['rgb(139, 69, 19)', 'SaddleBrown'],// 17 - Темно-коричневый
+	['rgb(  0,  0,  0)', 'Black'],// 18 - Черный
+	['rgb(255,255,255)', 'White'],// 19 - Белый
 ];
 
 
@@ -1370,7 +1392,7 @@ buildTheWorldWall(worldMatrix);
 createTreesAtRandom(5, 'tree');
 createTreesAtRandom(6, 'bush');
 createTreesAtRandom(3, 'grass');
-createBotsAtRandom(50, colors[8], 'random');
-createBotsAtRandom(50, colors[10], 'random');
-createBotsAtRandom(1, colors[8], 'random');
+createBotsAtRandom(50, colors[8][0], 'random');
+createBotsAtRandom(50, colors[10][0], 'random');
+createBotsAtRandom(1, colors[8][0], 'random');
 animate();
