@@ -825,7 +825,7 @@ addEventListener('click', (event) => {
 	let tX = Math.floor(x / GRID_SIZE),
 	  	tY = Math.floor(y / GRID_SIZE);
 	console.clear();
-	setPause();
+	// setPause();
 	console.log(`x: ${tX}, y: ${tY}`);
 	console.log(`Object: ${worldMatrix[tX][tY].objType}`);
 	// const bot = new Bot(x, y, 'red');
@@ -1282,6 +1282,8 @@ function unshiftFlagAttacked(worldMatrix) {
 
 // ! ToDo: добавить ген прибавки максимальной продолжительности жизни +2 за раз
 
+// ! ToDo: добавить ген рандомного смещения, в зависимости от значения в след. ячейке (random[1, value])
+
 /* ############################################## */
 
 // timerId = setTimeout(tick, 500);
@@ -1303,14 +1305,14 @@ function tick() {
 	if ((worldTime >= STEPS) || (pause == 1)) {
 		clearTimeout(timerId);
 	}
-	updateTurnCounter();
 }
 
-/* Отрисовываем номер текущего шага в боковом меню */
-function updateTurnCounter() {
-	const turn_counter = document.getElementById('turn-counter');
-	turn_counter.value = worldTime;
+/* Функция обновления значение в целевом поле в боковом меню */
+function updateValueAtField(targetField, targetValue) {
+	const xField = document.getElementById(targetField);
+	xField.value = targetValue;
 }
+
 
 function setPause() {
 	if (pause != 1) {
@@ -1353,7 +1355,8 @@ function generateFromParams() {
 	bush = document.getElementById('bush-count').value;
 	createTreesAtRandom(bush, 'bush');
 	grass = document.getElementById('grass-count').value;
-	createTreesAtRandom(grass, 'grass');
+	createTreesAtRandom(bush, 'grass');
+	logger();
 }
 
 /* Добавляем обработчик нажатия на кнопку Clear */
@@ -1362,6 +1365,9 @@ clear_button.addEventListener('click', clearTheWorld);
 
 function clearTheWorld() {
 	emptySpaceGenerator(worldMatrix);
+	worldTime = 0;
+	worldEnergy = world_width * world_heigth * 256;
+	logger();
 }
 
 
@@ -1396,6 +1402,9 @@ function logger() {
 	console.log(`step ${worldTime}`);
 	console.log(`free energy :${worldEnergy}`);
 	console.log(`full energy :${checkSummEnergy()}`);
+	updateValueAtField('turn-counter', worldTime);
+	updateValueAtField('free-energy', worldEnergy);
+	updateValueAtField('used-energy', checkSummEnergy());
 }
 
 const colors = [
