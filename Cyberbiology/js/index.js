@@ -1325,9 +1325,24 @@ render_speed_picker.addEventListener('change', () => {
 	// console.log(`Render speed is: ${render_speed}`);
 });
 
-	// 	console.clear();
-	// 	console.log(`Пауза?`);
-	// });
+const generate_button = document.getElementById('generate-button');
+generate_button.addEventListener('click', generateFromParams);
+
+function generateFromParams() {
+	let bots,
+			color = colors[2][0],
+			trees,
+			bush,
+			grass;
+	bots = document.getElementById('bots-count').value;
+	createBotsAtRandom(bots, color, 'random');
+	trees = document.getElementById('trees-count').value;
+	createTreesAtRandom(trees, 'tree');
+	bush = document.getElementById('bush-count').value;
+	createTreesAtRandom(bush, 'bush');
+	grass = document.getElementById('grass-count').value;
+	createTreesAtRandom(grass, 'grass');
+}
 
 function updateMatrix() {
 	worldMatrix.forEach(i => {
