@@ -71,15 +71,15 @@ function drawBot(ctx, x, y, s, color = 'gray') {
 	/* Тело бота */
 	ctx.fillStyle = color;
 	ctx.beginPath();
-	ctx.moveTo((2.5 + x) * s, (5 + y) * s);
-	ctx.quadraticCurveTo((2.5+x)*s, (2.5+y)*s, (5+x)*s, (2.5+y)*s);
-	ctx.quadraticCurveTo((7.5+x)*s, (2.5+y)*s, (7.5+x)*s, (5+y)*s);
-	ctx.lineTo((7.5 + x) * s, (7.5 + y) * s);
-	ctx.quadraticCurveTo((6.875+x)*s, (8.75+y)*s, (6.25+x)*s, (7.5+y)*s);
-	ctx.quadraticCurveTo((5.625+x)*s, (8.75+y)*s, (5+x)*s, (7.5+y)*s);
-	ctx.quadraticCurveTo((4.375+x)*s, (8.75+y)*s, (3.75+x)*s, (7.5+y)*s);
-	ctx.quadraticCurveTo((3.125+x)*s, (8.75+y)*s, (2.5+x)*s, (7.5+y)*s);
-	ctx.lineTo((2.5 + x) * s, (5 + y) * s);
+	ctx.moveTo((0.5 + x) * s, (2.5 + y) * s);
+	ctx.quadraticCurveTo((0.5 + x) * s, (0.5 + y) * s, (2.5 + x) * s, (0.5 + y) * s);
+	ctx.lineTo((7.5 + x) * s, (0.5 + y) * s);
+	ctx.quadraticCurveTo((9.5 + x) * s, (0.5 + y) * s, (9.5 + x) * s, (2.5 + y) * s);
+	ctx.lineTo((9.5 + x) * s, (7.5 + y) * s);
+	ctx.quadraticCurveTo((9.5 + x) * s, (9.5 + y) * s, (7.5 + x) * s, (9.5 + y) * s);
+	ctx.lineTo((2.5 + x) * s, (9.5 + y) * s);
+	ctx.quadraticCurveTo((0.5 + x) * s, (9.5 + y) * s, (0.5 + x) * s, (7.5 + y) * s);
+	ctx.lineTo((0.5 + x) * s, (2.5 + y) * s);
 	ctx.fill();
 	/* Рисуем глаза */
 	ctx.fillStyle = 'white';
@@ -99,4 +99,29 @@ function drawBot(ctx, x, y, s, color = 'gray') {
 	ctx.fill();
 }
 
-export { drawTree, drawBush, drawGrass, drawBot };
+/* Рисуем минерал */
+function drawMineral(ctx, x, y, s, color = 'gray') {
+	ctx.fillStyle = color;
+	ctx.beginPath();
+	ctx.moveTo((0.5 + x) * s, (2.5 + y) * s);
+	ctx.quadraticCurveTo((0.5 + x) * s, (0.5 + y) * s, (2.5 + x) * s, (0.5 + y) * s);
+	ctx.lineTo((7.5 + x) * s, (0.5 + y) * s);
+	ctx.quadraticCurveTo((9.5 + x) * s, (0.5 + y) * s, (9.5 + x) * s, (2.5 + y) * s);
+	ctx.lineTo((9.5 + x) * s, (7.5 + y) * s);
+	ctx.quadraticCurveTo((9.5 + x) * s, (9.5 + y) * s, (7.5 + x) * s, (9.5 + y) * s);
+	ctx.lineTo((2.5 + x) * s, (9.5 + y) * s);
+	ctx.quadraticCurveTo((0.5 + x) * s, (9.5 + y) * s, (0.5 + x) * s, (7.5 + y) * s);
+	ctx.lineTo((0.5 + x) * s, (2.5 + y) * s);
+	ctx.fill();
+	/* Добавим немного объема за счет "света" слева-наверху */
+	ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+	ctx.beginPath();
+	ctx.moveTo((0.5 + x) * s, (2.5 + y) * s);
+	ctx.quadraticCurveTo((0.5 + x) * s, (0.5 + y) * s, (2.5 + x) * s, (0.5 + y) * s);
+	ctx.quadraticCurveTo((6 + x) * s, (0.5 + y) * s, (6 + x) * s, (4 + y) * s);
+	ctx.quadraticCurveTo((6 + x) * s, (6 + y) * s, (4 + x) * s, (6 + y) * s);
+	ctx.quadraticCurveTo((0.5 + x) * s, (6 + y) * s, (0.5 + x) * s, (2.5 + y) * s);
+	ctx.fill();
+}
+
+export { drawTree, drawBush, drawGrass, drawBot, drawMineral };

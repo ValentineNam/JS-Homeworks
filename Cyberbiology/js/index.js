@@ -1,6 +1,6 @@
 'use strict'
 
-import { drawTree, drawBush, drawGrass, drawBot } from './draw_models.js';
+import { drawTree, drawBush, drawGrass, drawBot, drawMineral } from './draw_models.js';
 // import { addListeners, setPause } from './utils.js';
 
 // addListeners();
@@ -255,7 +255,7 @@ function botEatTree(botObj, frontObj, multiplier) {
 		aMinerals = botObj.minerals[0],
 		bEnergy = frontObj.energy[0],
 		bMinerals = frontObj.minerals[0],
-		oneBite = 60;
+		oneBite = 120;
 	multiplier * oneBite >= bEnergy ? oneBite = bEnergy : oneBite *= multiplier ; // * не можем съесть больше, чем у бота есть энергии
 	oneBite + aEnergy > botObj.energy[1] ? oneBite = botObj.energy[1] - aEnergy : false ; // * не можем съесть больше, чем вмещается
 	botObj.energy[0] += oneBite;
@@ -494,7 +494,8 @@ function botMakeChild() {
 	let parentX = this.x,
 		parentY = this.y,
 		newX,
-		newY;
+		newY,
+		parentGenom = this.genom;
 // * пробуем найти место рядом с собой, чтобы отпочковать нового бота
 	for (let index = 15; index--; ) {
 		let dx = getRandomInt(-1, 1),
@@ -519,6 +520,8 @@ function botMakeChild() {
 				temp = Math.round(worldMatrix[parentX][parentY].minerals[0] / 2);
 				worldMatrix[newX][newY].minerals[0] = temp;
 				worldMatrix[parentX][parentY].minerals[0] = worldMatrix[parentX][parentY].minerals[0] - temp;
+				worldMatrix[newX][newY].genom = parentGenom;
+				roll(MUTATION_FACTOR) ? worldMatrix[newX][newY].mutate() : false; // при рождении - у бота есть шанс мутировать 1 ген
 				index = 0;
 			} else {
 				continue;
@@ -532,7 +535,7 @@ function botCheckMakeChild() {
 	let age = this.age[0],
 		e = checkOwnParamLvl(this, 'energy'),
 		m = checkOwnParamLvl(this, 'minerals');
-	if ((e >= 7) && (m >= 7) && (age >= 30)) {
+	if ((e >= 8) && (m >= 2) && (age >= 30)) {
 		this.createChild();
 	}
 }
@@ -556,6 +559,14 @@ class Tree {
 			y = this.y * 10;
 		drawTree(ctx, x, y, s, this.color);
 	}
+
+	isAlive() {
+		checkIsAlive(this);
+		if (this.flagAlive == 0) {
+			worldEnergy += this.energy[0] + 4 * this.minerals[0];
+			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+		}
+	}
 }
 
 class Bush {
@@ -577,12 +588,20 @@ class Bush {
 			y = this.y * 10;
 		drawBush(ctx, x, y, s, this.color);
 	}
+
+	isAlive() {
+		checkIsAlive(this);
+		if (this.flagAlive == 0) {
+			worldEnergy += this.energy[0] + 4 * this.minerals[0];
+			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+		}
+	}
 }
 
 class Grass {
 	constructor(x, y) {
 		this.objType = 'tree';
-		this.age = [0,128];
+		this.age = [0,48];
 		this.x = x;
 		this.y = y;
 		this.energy = [0,256];
@@ -597,6 +616,14 @@ class Grass {
 		let x = this.x * 10,
 			y = this.y * 10;
 		drawGrass(ctx, x, y, s, this.color);
+	}
+
+	isAlive() {
+		checkIsAlive(this);
+		if (this.flagAlive == 0) {
+			worldEnergy += this.energy[0] + 4 * this.minerals[0];
+			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+		}
 	}
 }
 
@@ -733,7 +760,14 @@ function treeCheckMakeChild() {
 		e = checkOwnParamLvl(this, 'energy'),
 		m = checkOwnParamLvl(this, 'minerals');
 	if ((e >= 7) && (m >= 7) && (age >= 30)) {
-		this.createChild();
+		// размножается с шансом 20%
+		// if (roll(20)) {
+		// 	this.createChild(); 
+		// 	console.log(`rolled`);
+		// } else {
+		// 	console.log(`not rolled`);
+		// }
+		(roll(20)) ? this.createChild() : false;
 	}
 }
 
@@ -754,6 +788,11 @@ function incrementAge() {
 	if (this.age[0] < this.age[1]) {
 		this.age[0]++;
 	}
+}
+
+function roll(percent) {
+	let isRolled;
+	return  isRolled = (percent >= getRandomInt(1, 100));
 }
 
 class Space {
@@ -827,10 +866,16 @@ addEventListener('click', (event) => {
 	};
 	let tX = Math.floor(x / GRID_SIZE),
 	  	tY = Math.floor(y / GRID_SIZE);
-	console.clear();
-	// setPause();
-	console.log(`x: ${tX}, y: ${tY}`);
-	console.log(`Object: ${worldMatrix[tX][tY].objType}`);
+	let objType = worldMatrix[tX][tY].objType;
+	// console.clear();
+	// console.log(`x: ${tX}, y: ${tY}`);
+	// console.log(`Object: ${objType}`);
+	let info = document.getElementById('info-output');
+	info.value = `x: ${tX}, y: ${tY}\nObject: ${objType}`;
+	objType == 'bot' ? info.value += `\nGenom:\n[${worldMatrix[tX][tY].genom}]` : false;
+	(objType == 'bot' || objType == 'tree') ? info.value += `\nAge:\n[${worldMatrix[tX][tY].age}]` : false;
+	(objType == 'bot' || objType == 'tree') ? info.value += `\nEnergy:\n[${worldMatrix[tX][tY].energy}]` : false;
+	(objType == 'bot' || objType == 'tree') ? info.value += `\nMinerals:\n[${worldMatrix[tX][tY].minerals}]` : false;
 	// const bot = new Bot(x, y, 'red');
 	// bot.draw();
 	// bot.generateRandomGenom();
@@ -1386,6 +1431,7 @@ function updateMatrix() {
 			if (j.objType == 'tree') {
 				j.growth();
 				j.checkMakeChild();
+				j.isAlive();
 			}
 			if (j.objType == 'bot') {
 				// j.changeDirection();
