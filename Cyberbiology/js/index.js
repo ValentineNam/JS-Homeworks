@@ -12,7 +12,7 @@ const
 	GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
 	GENS = 11, // количество разных генов
-	STEPS = 120;
+	STEPS = 1200;
 
 let render_speed = 1,
 	pause = 1,
@@ -36,7 +36,7 @@ canvas.height = CANVAS_HEIGTH;
 class Bot {
 	constructor(x, y, color) {
 		this.objType = 'bot';
-		this.age = [0,1024];
+		this.age = [0,128];
 		this.x = x;
 		this.y = y;
 		this.color = color; // ! ToDo: цвет наследуется от предков и зависит от характера питания
@@ -266,7 +266,7 @@ function botEatTree(botObj, frontObj, multiplier) {
 	frontObj.minerals[0] -= oneBite;
 	checkIsAlive(frontObj);
 	// ! ToDo: переписать на наследование цвета, в зависимости от питания предков
-	botObj.color = colors[6][0]; // * бот зеленеет, если питается мясом
+	botObj.color = colors[6][0]; // * бот зеленеет, если питается зеленью
 }
 
 function botEatMineral(params) {
@@ -547,13 +547,14 @@ class Tree {
 		this.minerals = [0,2048];
 		this.flagAlive = 1;
 		this.genus = 'tree';
+		this.color = colors[7][0];
 	}
 
 	draw() {
 		let s = GRID_SIZE / 10; // scale
 		let x = this.x * 10,
 			y = this.y * 10;
-		drawTree(ctx, x, y, s);
+		drawTree(ctx, x, y, s, this.color);
 	}
 }
 
@@ -567,13 +568,14 @@ class Bush {
 		this.minerals = [0,1024];
 		this.flagAlive = 1;
 		this.genus = 'bush';
+		this.color = colors[7][0];
 	}
 
 	draw() {
 		let s = GRID_SIZE / 10; // scale
 		let x = this.x * 10,
 			y = this.y * 10;
-		drawBush(ctx, x, y, s);
+		drawBush(ctx, x, y, s, this.color);
 	}
 }
 
@@ -587,13 +589,14 @@ class Grass {
 		this.minerals = [0,256];
 		this.flagAlive = 1;
 		this.genus = 'grass';
+		this.color = colors[7][0];
 	}
 
 	draw() {
 		let s = GRID_SIZE / 10; // scale
 		let x = this.x * 10,
 			y = this.y * 10;
-		drawGrass(ctx, x, y, s);
+		drawGrass(ctx, x, y, s, this.color);
 	}
 }
 
@@ -1355,7 +1358,7 @@ function generateFromParams() {
 	bush = document.getElementById('bush-count').value;
 	createTreesAtRandom(bush, 'bush');
 	grass = document.getElementById('grass-count').value;
-	createTreesAtRandom(bush, 'grass');
+	createTreesAtRandom(grass, 'grass');
 	logger();
 }
 
@@ -1365,11 +1368,14 @@ clear_button.addEventListener('click', clearTheWorld);
 
 function clearTheWorld() {
 	emptySpaceGenerator(worldMatrix);
+	buildTheWorldWall(worldMatrix);
 	worldTime = 0;
 	worldEnergy = world_width * world_heigth * 256;
+	(pause != 1) ? setPause() : false;
 	logger();
 }
 
+// ! ToDo: Добавить обработчик выбора цвета
 
 function updateMatrix() {
 	worldMatrix.forEach(i => {
@@ -1434,10 +1440,5 @@ const colors = [
 const treeFactory = new TreeFactory();
 emptySpaceGenerator(worldMatrix);
 buildTheWorldWall(worldMatrix);
-// createTreesAtRandom(5, 'tree');
-// createTreesAtRandom(6, 'bush');
-// createTreesAtRandom(3, 'grass');
-// createBotsAtRandom(50, colors[8][0], 'random');
-// createBotsAtRandom(50, colors[10][0], 'random');
-// createBotsAtRandom(1, colors[8][0], 'random');
+
 animate();

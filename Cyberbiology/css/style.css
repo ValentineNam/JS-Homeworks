@@ -108,7 +108,7 @@ body {
 }
 
 .preset-container input {
-    font-size: 12px;
+    font-size: 10px;
     height: 16px;
     width: 40px;
     margin-left: 5px;
@@ -116,7 +116,7 @@ body {
 }
 
 .preset-container select {
-    font-size: 12px;
+    font-size: 10px;
     height: 16px;
     margin-left: 5px;
     align-self: center;
@@ -144,7 +144,7 @@ body {
 }
 
 .preset-container-2 input, .preset-container-3 input, .preset-container-4 input {
-    font-size: 12px;
+    font-size: 10px;
     height: 16px;
     width: 40px;
     margin-left: 5px;
