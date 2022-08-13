@@ -11,7 +11,7 @@ const
 	GRID_SIZE = 15,
 	GENOM_LENGTH = 16,
 	MUTATION_FACTOR = 15,
-	GENS = 11, // количество разных генов
+	GENS = 12, // количество разных генов
 	STEPS = 1200;
 
 let render_speed = 1,
@@ -97,6 +97,20 @@ class Bot {
 		if (this.flagAlive == 0) {
 			worldEnergy += this.energy[0] + 4 * this.minerals[0];
 			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+		}
+	}
+/* метод конвертации минералов в энергию */
+	chemosynthesis() {
+		if ((this.minerals[0] > 9) && ((this.energy[1] - this.energy[0]) >= 32)) {
+			this.minerals[0] -= 8;
+			this.energy[0] += 32;
+		}
+	}
+/* метод конвертации эниргии в минералы */
+	mineralisation() {
+		if ((this.energy[0] > 40) && ((this.minerals[1] - this.minerals[0]) >= 8)) {
+			this.minerals[0] += 8;
+			this.energy[0] -= 32;
 		}
 	}
 /* Метод обработки сна */
@@ -1105,30 +1119,54 @@ function genomVM(botObj) {
 				breakFlag = 1;
 				console.log(`Прерывающая цикл операция`);
 				break;
-/* Проверить, что спереди? */
+/* Конвертировать собственные минералы в энергию */
 			case 7:
-				console.log(`Gen 7 - Проверка объекта спереди с переходом к команде в адресе + целевое значение`);
+				console.log(`Gen 7 - Хемосинтез`);
+				console.log(`Энергия бота до Хемосинтеза ${botObj.energy}`);
+				console.log(`Минералы бота до Хемосинтеза ${botObj.minerals}`);
+				botObj.chemosynthesis();
+				console.log(`Энергия бота после Хемосинтеза ${botObj.energy}`);
+				console.log(`Минералы бота после Хемосинтеза ${botObj.minerals}`);
+				// adr = incAdr(adr);
+				breakFlag = 1;
+				console.log(`Прерывающая цикл операция`);
+				break;
+/* Конвертировать собственную энергию в минералы */
+			case 8:
+				console.log(`Gen 8 - Минерализация`);
+				console.log(`Энергия бота до Минерализации ${botObj.energy}`);
+				console.log(`Минералы бота до Минерализации ${botObj.minerals}`);
+				botObj.mineralisation();
+				console.log(`Энергия бота после Минерализации ${botObj.energy}`);
+				console.log(`Минералы бота после Минерализации ${botObj.minerals}`);
+				// adr = incAdr(adr);
+				breakFlag = 1;
+				console.log(`Прерывающая цикл операция`);
+				break;
+/* Проверить, что спереди? */
+			case 9:
+				console.log(`Gen 9 - Проверка объекта спереди с переходом к команде в адресе + целевое значение`);
 				adr = incAdr(adr, returnAdrShiftDependOfFrontObj(botObj, adr));
 				actCounter--;
 				console.log(`Переходим к ячейке ${adr}`);
 				break;
 /* Проверить, голоден ли */
-			case 8:
-				console.log(`Gen 8 - Проверить голоден ли, переход к команде в адресе + целевое значение`);
+			case 10:
+				console.log(`Gen 10 - Проверить голоден ли, переход к команде в адресе + целевое значение`);
 				adr = incAdr(adr, returnAdrShiftHunger(botObj, adr));
 				actCounter--;
 				break;
 /* Проверить, атакован ли и положить направление атаки в память */
-			case 9:
-				console.log(`Gen 9 - Проверить атакован ли, положить направление атаки в память`);
+			case 11:
+				console.log(`Gen 11 - Проверить атакован ли, положить направление атаки в память`);
 				adr = incAdr(adr);
 				memory = returnLastAttackedDirection(botObj);
 				actCounter--;
 				console.log(`Переходим к ячейке ${adr}`);
 				break;
 /* Проверить, атакован ли и перейти к ячейке из памяти в зависимости от результата +1 не атакован, +2/+3 атакован в прошлом/текущем ходу/ +4 в обоих */
-			case 10:
-				console.log(`Gen 10 - Проверить атакован ли, перейти к команде в адресе в зависимости от результата`);
+			case 12:
+				console.log(`Gen 12 - Проверить атакован ли, перейти к команде в адресе в зависимости от результата`);
 				adr = incAdr(adr, returnAdrShiftIfAttacked(botObj, adr));
 				actCounter--;
 				console.log(`Переходим к ячейке ${adr}`);

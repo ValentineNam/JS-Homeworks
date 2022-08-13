@@ -23,7 +23,7 @@
 								<legend>Preset options</legend>
 								<div class="preset-container">
 									<p>Bots:</p>
-									<input type="number" id="bots-count" min="1" max="50" value="20">
+									<input type="number" id="bots-count" min="1" max="500" value="200">
 									<p>Color:</p>
 									<select id="color-select">
 										<option value="1">One</option>
@@ -33,15 +33,15 @@
 								</div>
 								<div class="preset-container-2">
 										<p><input type="checkbox" name="editor-answer" value="on" checked>Trees</p>
-										<input type="number" id="trees-count" min="1" max="50" value="5">
+										<input type="number" id="trees-count" min="1" max="50" value="10">
 								</div>
 								<div class="preset-container-3">
 									<p><input type="checkbox" name="editor-answer" value="on" checked>Bush</p>
-									<input type="number" id="bush-count" min="1" max="50" value="5">
+									<input type="number" id="bush-count" min="1" max="50" value="15">
 								</div>
 								<div class="preset-container-4">
 									<p><input type="checkbox" name="editor-answer" value="on" checked>Grass</p>
-									<input type="number" id="grass-count" min="1" max="50" value="5">
+									<input type="number" id="grass-count" min="1" max="50" value="20">
 								</div>
 								<div class="buttons">
 									<input type="button" class="btn-1" id="generate-button" value="Generate">
@@ -101,7 +101,7 @@
 								</fieldset>
 							</div>
 							<div class="info-output">
-								<p><textarea rows="8" cols="22" name="info-output" readonly></textarea></p>
+								<p><textarea rows="12" cols="22" id="info-output" readonly></textarea></p>
 							</div>
 							<div class="editor-mode">
 								<p><input type="checkbox" name="editor-answer" value="on" checked>Edit</p>
