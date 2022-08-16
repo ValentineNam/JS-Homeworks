@@ -8,11 +8,12 @@ import { drawTree, drawBush, drawGrass, drawBot, drawMineral } from './draw_mode
 const
 	CANVAS_WIDTH = 781,
 	CANVAS_HEIGTH = 781,
-	GRID_SIZE = 15,
-	GENOM_LENGTH = 16,
+	GRID_SIZE = 10,
+	GENOM_LENGTH = 32,
 	MUTATION_FACTOR = 15,
 	GENS = 12, // количество разных генов
-	STEPS = 1200;
+	STEPS = 64,
+	ENERGY_PER_CELL = 512;
 
 let render_speed = 1,
 	pause = 1,
@@ -21,7 +22,7 @@ let render_speed = 1,
 	world_heigth = Math.floor(CANVAS_HEIGTH / GRID_SIZE);
 
 let worldTime = 0;
-let worldEnergy = world_width * world_heigth * 256;
+let worldEnergy = world_width * world_heigth * ENERGY_PER_CELL;
 let fullWorldEnergy = 0;
 
 let worldMatrix = create2DArray(world_width, world_heigth);
@@ -95,8 +96,7 @@ class Bot {
 	isAlive() {
 		checkIsAlive(this);
 		if (this.flagAlive == 0) {
-			worldEnergy += this.energy[0] + 4 * this.minerals[0];
-			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+			becomeMineral(this);
 		}
 	}
 /* метод конвертации минералов в энергию */
@@ -203,8 +203,9 @@ function eatFromCoords(botObj, x, y) {
 		default:
 			break;
 	}
+	botDecEnergy(botObj, 1);
 }
- 
+
 // ! ToDo: Дописать эту функцию - случай, когда бот не смог победить
 function botEatBot(botObj, frontObj, multiplier) {
 	let aMinerals = botObj.minerals[0],
@@ -242,7 +243,7 @@ function botWin(botObj, frontObj, multiplier = 1) {
 }
 
 function checkIsAlive(obj) {
-	if (obj.objType == 'bot') {
+	if ((obj.objType == 'bot') || (obj.objType == 'tree')) {
 		if ((obj.energy[0] <= 0) || (obj.minerals[0] <= 0)) { // * бот не может жить, если у него нет энергии или минералов ака костей
 			obj.flagAlive = 0;
 			obj.color = 'gray';
@@ -577,10 +578,40 @@ class Tree {
 	isAlive() {
 		checkIsAlive(this);
 		if (this.flagAlive == 0) {
-			worldEnergy += this.energy[0] + 4 * this.minerals[0];
-			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+			becomeMineral(this);
 		}
 	}
+}
+// ! ToDo: Найти и пофиксить баг утечкой энергии
+function becomeMineral(obj) {
+		// console.log(`ALIVE == 0`);
+		// let obj = worldMatrix[obj.x][obj.y];
+		if ((obj.energy[0] > 0) || (obj.minerals[0] > 0)) {
+			let e = 1 * obj.energy[0],
+					m = 1 * obj.minerals[0];
+					worldMatrix[obj.x][obj.y] = new Mineral(obj.x, obj.y);
+			// console.log(`CREATE MINERAL`);
+			worldMatrix[obj.x][obj.y].energy[0] = e;
+			worldMatrix[obj.x][obj.y].minerals[0] = m;
+			if (worldMatrix[obj.x][obj.y].energy[0] > worldMatrix[obj.x][obj.y].energy[1]) {
+				console.log(`e[0]=${worldMatrix[obj.x][obj.y].energy[0]}, e[1]=${worldMatrix[obj.x][obj.y].energy[1]}`);
+				console.log(`we before =${worldEnergy}`);
+				worldEnergy += (worldMatrix[obj.x][obj.y].energy[0] - worldMatrix[obj.x][obj.y].energy[1]);
+				worldMatrix[obj.x][obj.y].energy[0] = 1 * worldMatrix[obj.x][obj.y].energy[1];
+				console.log(`we after =${worldEnergy}`);
+			}
+			if (worldMatrix[obj.x][obj.y].minerals[0] > worldMatrix[obj.x][obj.y].minerals[1]) {
+				worldEnergy += 4 * (worldMatrix[obj.x][obj.y].minerals[0] - worldMatrix[obj.x][obj.y].minerals[1]);
+				worldMatrix[obj.x][obj.y].minerals[0] = 1 * worldMatrix[obj.x][obj.y].minerals[1];
+			}
+		} else {
+			worldMatrix[obj.x][obj.y] = new Space(obj.x, obj.y);
+		}
+}
+
+function annihilation(obj) {
+	worldEnergy += (1 * worldMatrix[obj.x][obj.y].energy[0] + 4 * worldMatrix[obj.x][obj.y].minerals[0]);
+	worldMatrix[obj.x][obj.y] = new Space(obj.x, obj.y);
 }
 
 class Bush {
@@ -606,8 +637,7 @@ class Bush {
 	isAlive() {
 		checkIsAlive(this);
 		if (this.flagAlive == 0) {
-			worldEnergy += this.energy[0] + 4 * this.minerals[0];
-			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+			becomeMineral(this);
 		}
 	}
 }
@@ -615,7 +645,7 @@ class Bush {
 class Grass {
 	constructor(x, y) {
 		this.objType = 'tree';
-		this.age = [0,48];
+		this.age = [0,64];
 		this.x = x;
 		this.y = y;
 		this.energy = [0,256];
@@ -628,15 +658,14 @@ class Grass {
 	draw() {
 		let s = GRID_SIZE / 10; // scale
 		let x = this.x * 10,
-			y = this.y * 10;
+				y = this.y * 10;
 		drawGrass(ctx, x, y, s, this.color);
 	}
 
 	isAlive() {
 		checkIsAlive(this);
 		if (this.flagAlive == 0) {
-			worldEnergy += this.energy[0] + 4 * this.minerals[0];
-			worldMatrix[this.x][this.y] = new Space(this.x, this.y);
+			becomeMineral(this);
 		}
 	}
 }
@@ -815,6 +844,34 @@ class Space {
 	}
 }
 
+class Mineral {
+	constructor(x, y) {
+		this.objType = 'mineral';
+		this.age = [0,10];
+		this.x = x;
+		this.y = y;
+		this.energy = [0,128];
+		this.minerals = [0,2048];
+		this.flagAlive = 1;
+		this.color = 'gray';
+	}
+	draw() {
+		let s = GRID_SIZE / 10; // scale
+		let x = this.x * 10,
+			y = this.y * 10;
+		drawMineral(ctx, x, y, s, this.color);
+	}
+/* Метод увеличения возраста */
+	incAge = incrementAge;
+/* По достижению определенного возраста минералы превращаются в энергию */
+	isAlive() {
+		checkIsAlive(this);
+		if (this.flagAlive == 0) {
+			annihilation(this);
+		}
+	}
+}
+
 class Wall {
 	constructor(x, y) {
 		this.objType = 'wall';
@@ -909,7 +966,7 @@ function animate() {
 function drawElements(elements) {
 	elements.forEach(i => {
 		i.forEach(j => {
-			if ((j.objType == 'bot') || (j.objType == 'tree')) {
+			if ((j.objType == 'bot') || (j.objType == 'tree') || (j.objType == 'mineral')) {
 				j.draw();
 			}
 		});
@@ -927,7 +984,7 @@ function drawGrid(ctx) {
 		ctx.lineTo(CANVAS_WIDTH, i + 0.5);
 	}
 
-	ctx.strokeStyle = '#f0f0f0';
+	ctx.strokeStyle = 'rgba(240, 240, 240, 0.1)';
 	ctx.stroke();
 	ctx.closePath();
 }
@@ -1035,6 +1092,7 @@ function genomVM(botObj) {
 				botObj.mutate();
 				console.log(`Новый  геном ${genom}`);
 				adr = incAdr(adr);
+				botDecEnergy(botObj, 1);
 				actCounter--;
 				console.log(`Переходим к ячейке ${adr}`);
 				break;
@@ -1054,6 +1112,7 @@ function genomVM(botObj) {
 				botObj.changeDirection('random');
 				console.log(`Новое направление ${botObj.direction}`);
 				adr = incAdr(adr);
+				botDecEnergy(botObj, 1);
 				actCounter--;
 				console.log(`Переходим к ячейке ${adr}`);
 				break;
@@ -1254,6 +1313,7 @@ function returnAdrShiftDependOfFrontObj(botObj, adr) {
 				}
 				console.log(`Объект в клетке x = ${frontCoords[0]}, y = ${frontCoords[1]} ${l1(frontObj)}`);	
 			}
+			botDecEnergy(botObj, 1);
 	return adrShift > 0? adrShift: 1;
 }
 // ! ToDo: выпилить когда не нужна будет
@@ -1307,6 +1367,7 @@ function returnAdrShiftHunger(botObj, adr) {
 			break;
 	}
 	console.log(`Бот ${hungry = 0 ? 'не голоден' : 'голоден'}, адрес смещения берем из genom[${newAdr}] = ${adrShift}`);
+	botDecEnergy(botObj, 1);
 	return adrShift;
 }
 
@@ -1314,6 +1375,7 @@ function returnAdrShiftHunger(botObj, adr) {
 function returnLastAttackedDirection(botObj) {
 	let attackedNow = botObj.flagAttacked[0],
 			attackedLastTurn = botObj.flagAttacked[1];
+			botDecEnergy(botObj, 1);
 	if (attackedNow > 0) {
 		return attackedNow;
 	} else if (attackedLastTurn > 0) {
@@ -1337,6 +1399,7 @@ function returnAdrShiftIfAttacked(botObj, adr) {
 		newAdr += 2;
 	}
 	adrShift = botObj.genom[adr+newAdr];
+	botDecEnergy(botObj, 1);
 	return adrShift;
 }
 
@@ -1453,7 +1516,7 @@ function clearTheWorld() {
 	emptySpaceGenerator(worldMatrix);
 	buildTheWorldWall(worldMatrix);
 	worldTime = 0;
-	worldEnergy = world_width * world_heigth * 256;
+	worldEnergy = world_width * world_heigth * ENERGY_PER_CELL;
 	(pause != 1) ? setPause() : false;
 	logger();
 }
@@ -1463,23 +1526,21 @@ function clearTheWorld() {
 function updateMatrix() {
 	worldMatrix.forEach(i => {
 		i.forEach(j => {
-			if ((j.objType == 'bot') || (j.objType == 'tree')) {
-				j.incAge();
-			}
 			if (j.objType == 'tree') {
 				j.growth();
 				j.checkMakeChild();
+				j.incAge();
 				j.isAlive();
 			}
 			if (j.objType == 'bot') {
-				// j.changeDirection();
-				// j.move();
-				// j.eat();
-				// j.getGreenEnergy();
-				// j.genom = [2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0, 2, 7, 0];
 				genomVM(j);
 				j.checkMakeChild();
 				j.isSleeping();
+				j.incAge();
+				j.isAlive();
+			}
+			if (j.objType == 'mineral') {
+				j.incAge();
 				j.isAlive();
 			}
 		});
