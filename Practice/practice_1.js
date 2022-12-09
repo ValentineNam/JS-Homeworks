@@ -30,7 +30,7 @@ console.log(charsCountA(t1, 'С'));
 console.log(charsCountA(t1, ' '));
 console.log(charsCountA(t1, ','));
 console.log(charsCountB(t1, 'С'));
-
+console.log('-----------');
 /*
 Task 2
 Найти медиану неотсортированного массива
@@ -42,7 +42,9 @@ Task 2
 function returnMedian(arr) {
   let med = null;
     if (Array.isArray(arr)) {
+      console.log(`Arr before sorting: \n ${arr}`);
       let a = bubbleSorter(arr);
+      console.log(`Arr after sorting: \n ${arr}`);
       if (a.length >= 2) {
         if (a.length % 2 == 0) {
           let pos = a.length / 2;
@@ -98,9 +100,10 @@ function getRandomInt(min, max) {
 
 console.log('Test task 2');
 let t2 = randomArrayGenerator();
-console.log(t2);
+// console.log(t2);
 // console.log(bubbleSorter(t2));
-console.log(returnMedian(t2));
+console.log(`Median is: ${returnMedian(t2)}`);
+console.log('-----------');
 
 /*
 Task 3
@@ -126,3 +129,4 @@ function isTripleLine(arr) {
 console.log('Test task 3');
 let t3 = randomArrayGenerator(10, 1 , 10);
 console.log(isTripleLine(t3));
+console.log('-----------');
