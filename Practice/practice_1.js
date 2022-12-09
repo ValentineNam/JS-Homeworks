@@ -123,6 +123,6 @@ function isTripleLine(arr) {
   return false;
 }
 
-console.log('Test task 2');
+console.log('Test task 3');
 let t3 = randomArrayGenerator(10, 1 , 10);
 console.log(isTripleLine(t3));
