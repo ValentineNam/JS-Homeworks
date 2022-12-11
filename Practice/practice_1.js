@@ -43,18 +43,18 @@ function returnMedian(arr) {
   let med = null;
     if (Array.isArray(arr)) {
       console.log(`Arr before sorting: \n ${arr}`);
-      let a = bubbleSorter(arr);
+      arr = bubbleSorter(arr);
       console.log(`Arr after sorting: \n ${arr}`);
-      if (a.length >= 2) {
-        if (a.length % 2 == 0) {
-          let pos = a.length / 2;
-          med = (a[pos - 1] + a[pos]) / 2;
+      if (arr.length >= 2) {
+        if (arr.length % 2 == 0) {
+          let pos = arr.length / 2;
+          med = (arr[pos - 1] + arr[pos]) / 2;
         } else {
-          let pos = Math.floor(a.length / 2);
-          med = a[pos];
+          let pos = Math.floor(arr.length / 2);
+          med = arr[pos];
         }
-      } else if (a.length == 1) {
-        med = a[0];
+      } else if (arr.length == 1) {
+        med = arr[0];
       }
     }
   return med;
@@ -69,7 +69,7 @@ function bubbleSorter(arr) {
       if (arr[i + 1]) {
         if (arr[i] > arr[i + 1]) {
           let buffer = arr[i + 1];
-          arr[i+1] = arr[i];
+          arr[i + 1] = arr[i];
           arr[i] = buffer;
           changes = true;
         }
