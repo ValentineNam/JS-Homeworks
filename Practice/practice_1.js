@@ -111,15 +111,15 @@ Task 3
 function isTripleLine(arr) {
   if (Array.isArray(arr) && (arr.length >= 3)) {
     console.log(`Arr before sorting: \n ${arr}`);
-    let a = bubbleSorter(arr),
-        counter = 0;
-        console.log(`Arr after sorting: \n ${arr}`);
-        for (let i = 0; i < arr.length; i++) {
-          a[i] - a[i + 1] == -1 ? counter++ : counter = 0;
-          if (counter >= 3) {
-            return true;
-          }
+    arr = bubbleSorter(arr);
+    let counter = 0;
+      console.log(`Arr after sorting: \n ${arr}`);
+      for (let i = 0; i < arr.length; i++) {
+        arr[i] - arr[i + 1] == -1 ? counter++ : counter = 0;
+        if (counter >= 3) {
+          return true;
         }
+      }
   }
   return false;
 }
