@@ -91,11 +91,9 @@ function randomArrayGenerator(count = 10, low = 0, high = 100) {
 
 /* возвращает случайное число в диапазоне [min, max] */
 function getRandomInt(min, max) {
-	if (min < max) {
-		return Math.floor(Math.random() * (max - min + 1)) + min;
-	} else {
-		return Math.floor(Math.random() * (min - max + 1)) + max;
-	}
+	return (min < max) ?
+		Math.floor(Math.random() * (max - min + 1)) + min :
+    Math.floor(Math.random() * (min - max + 1)) + max ;
 }
 
 console.log('Test task 2');
