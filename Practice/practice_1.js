@@ -30,7 +30,7 @@ console.log(charsCountA(t1, 'С'));
 console.log(charsCountA(t1, ' '));
 console.log(charsCountA(t1, ','));
 console.log(charsCountB(t1, 'С'));
-console.log('-----------');
+console.log('-------------');
 /*
 Task 2
 Найти медиану неотсортированного массива
@@ -42,9 +42,7 @@ Task 2
 function returnMedian(arr) {
   let med = null;
     if (Array.isArray(arr)) {
-      console.log(`Arr before sorting: \n ${arr}`);
       arr = bubbleSorter(arr);
-      console.log(`Arr after sorting: \n ${arr}`);
       if (arr.length >= 2) {
         if (arr.length % 2 == 0) {
           let pos = arr.length / 2;
@@ -62,6 +60,7 @@ function returnMedian(arr) {
 
 /* Сортировка пузырьком */
 function bubbleSorter(arr) {
+  console.log(`Arr before sorting: \n${arr}`);
   let changes = false;
   do {
     changes = false;
@@ -76,6 +75,7 @@ function bubbleSorter(arr) {
       }
     }
   } while (changes == true);
+  console.log(`Arr after sorting: \n${arr}`);
   return arr;
 }
 
@@ -96,12 +96,14 @@ function getRandomInt(min, max) {
     Math.floor(Math.random() * (min - max + 1)) + max ;
 }
 
-console.log('Test task 2');
-let t2 = randomArrayGenerator();
-// console.log(t2);
-// console.log(bubbleSorter(t2));
-console.log(`Median is: ${returnMedian(t2)}`);
-console.log('-----------');
+console.log('Test task 2_1');
+let t2_1 = randomArrayGenerator();
+console.log(`Median is: ${returnMedian(t2_1)}`);
+console.log('-------------');
+console.log('Test task 2_2');
+let t2_2 = randomArrayGenerator(11);
+console.log(`Median is: ${returnMedian(t2_2)}`);
+console.log('-------------');
 
 /*
 Task 3
@@ -110,10 +112,8 @@ Task 3
 
 function isTripleLine(arr) {
   if (Array.isArray(arr) && (arr.length >= 3)) {
-    console.log(`Arr before sorting: \n ${arr}`);
     arr = bubbleSorter(arr);
     let counter = 0;
-      console.log(`Arr after sorting: \n ${arr}`);
       for (let i = 0; i < arr.length; i++) {
         arr[i] - arr[i + 1] == -1 ? counter++ : counter = 0;
         if (counter >= 3) {
@@ -127,4 +127,4 @@ function isTripleLine(arr) {
 console.log('Test task 3');
 let t3 = randomArrayGenerator(10, 1 , 10);
 console.log(isTripleLine(t3));
-console.log('-----------');
+console.log('-------------');
