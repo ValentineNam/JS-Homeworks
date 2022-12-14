@@ -46,18 +46,24 @@ function calculateIndexes(year = start) {
   return obj;
 }
 
-// console.log(calculateIndexes(1979));
-// console.log(calculateIndexes(1980));
-// console.log(calculateIndexes(1981));
-// console.log(calculateIndexes(1982));
-// console.log(calculateIndexes(1983));
-// console.log(calculateIndexes(1984));
-// console.log(calculateIndexes(1985));
-// console.log(calculateIndexes(1986));
-// console.log(calculateIndexes(1987));
+function returnEasternYear(year = 1984) {
+  let indexes = calculateIndexes(year);
+  console.log(`${year} - ${decorateString(indexes)}`);
+}
 
+function decorateString(indexes) {
+  let femY = ['а', 'я', 'ь'],
+      femW = ['ая'],
+      decoratedStr = '',
+      yStr = years[indexes.y];
+  if (yStr.endsWith(femY[0]) || yStr.endsWith(femY[1]) || yStr.endsWith(femY[2])){
+    decoratedStr = `${(colors[indexes.c]).slice(0, -2)}${femW} ${years[indexes.y]}`;
+  } else {
+    decoratedStr = `${colors[indexes.c]} ${years[indexes.y]}`;
+  }
+  return decoratedStr;
+}
 
-
-// for (let i = 1984; i < 2000; i++) {
-//   console.log(`Year ${i}: y = ${calculateIndexes(i).y} c = ${calculateIndexes(i).c}`);
-// }
+for (let i = 1984; i < 2000; i++) {
+  returnEasternYear(i);
+}
