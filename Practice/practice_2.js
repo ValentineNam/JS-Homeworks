@@ -43,15 +43,12 @@ function calculateIndexes(year = start) {
   } else {
     for (; y < 0; y += 12) {} // отрицательная полуось
   }
-
   c = Math.floor(diff % 10 / 2);
-
   if (c >= 0) {
     for (; c >= 5; c -= 5) {} // положительная полуось
   } else {
     for (; c < 0; c += 5) {} // положительная полуось
   }
-
   obj.y = y;
   obj.c = c;
   return obj;
