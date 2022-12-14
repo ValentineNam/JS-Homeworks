@@ -38,9 +38,23 @@ function calculateIndexes(year = start) {
       c = 0;
   diff = year - start;
   y = diff % 12;
-  for (; y >= 12; y -= 12) {}
-  c = Math.floor(diff / 2);
-  for (; c >= 5; c -= 5) {}
+  if (y >= 0) {
+    for (; y >= 12; y -= 12) {} // положительная полуось
+  } else {
+    for (; y < 0; y += 12) {} // отрицательная полуось
+  }
+
+  c = Math.floor(diff % 10 / 2);
+
+  if (c >= 0) {
+    for (; c >= 5; c -= 5) {} // положительная полуось
+  } else {
+    for (; c < 0; c += 5) {} // положительная полуось
+  }
+
+  c == -0 ? c = 0 * c : c = c;
+  y == -0 ? y = 0 * y : y = y;
+
   obj.y = y;
   obj.c = c;
   return obj;
@@ -64,6 +78,6 @@ function decorateString(indexes) {
   return decoratedStr;
 }
 
-for (let i = 1984; i < 2000; i++) {
+for (let i = 1963; i < 2000; i++) {
   returnEasternYear(i);
 }
