@@ -52,9 +52,6 @@ function calculateIndexes(year = start) {
     for (; c < 0; c += 5) {} // положительная полуось
   }
 
-  c == -0 ? c = 0 * c : c = c;
-  y == -0 ? y = 0 * y : y = y;
-
   obj.y = y;
   obj.c = c;
   return obj;
