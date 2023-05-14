@@ -8,14 +8,15 @@ import { drawTree, drawBush, drawGrass, drawBot, drawMineral } from './draw_mode
 const
 	CANVAS_WIDTH = 781,
 	CANVAS_HEIGTH = 781,
-	GRID_SIZE = 10,
+	GRID_SIZE = 15,
 	GENOM_LENGTH = 32,
 	MUTATION_FACTOR = 15,
-	GENS = 12, // количество разных генов
-	STEPS = 64,
+	GENS = 14, // количество разных генов
+	STEPS = 6400,
+	TREE_GROWTH_SPEED = 2,
 	ENERGY_PER_CELL = 512;
 
-let render_speed = 1,
+let render_speed = 320,
 	pause = 1,
 	timerId,
 	world_width = Math.floor(CANVAS_WIDTH / GRID_SIZE),
@@ -106,7 +107,7 @@ class Bot {
 			this.energy[0] += 32;
 		}
 	}
-/* метод конвертации эниргии в минералы */
+/* метод конвертации энергии в минералы */
 	mineralisation() {
 		if ((this.energy[0] > 40) && ((this.minerals[1] - this.minerals[0]) >= 8)) {
 			this.minerals[0] += 8;
@@ -124,6 +125,14 @@ class Bot {
 /* Метод переводит флаг движения в состояние 0 */
 	clearMoveParams() {
 		this.flagMoved = 0;
+	}
+/* Увеличение максимального возраста */
+	longAge() {
+		let cost = 16;
+		if (this.energy[0] > cost) {
+			this.age[1] += 2;
+			botDecEnergy(this, cost);
+		}
 	}
 }
 
@@ -209,8 +218,8 @@ function eatFromCoords(botObj, x, y) {
 // ! ToDo: Дописать эту функцию - случай, когда бот не смог победить
 function botEatBot(botObj, frontObj, multiplier) {
 	let aMinerals = botObj.minerals[0],
-		bMinerals = frontObj.minerals[0],
-		chanceToWin = getRandomInt(1, 100);
+			bMinerals = frontObj.minerals[0],
+			chanceToWin = getRandomInt(1, 100);
 	if (bMinerals > aMinerals) { // * если атакуемый бот "толще" по минералам
 		chanceToWin > 0 ?
 			botWin(botObj, frontObj, multiplier) : // * откусили (20% шанс)
@@ -262,7 +271,7 @@ function sleepingMechanics(botObj) {
 }
 
 function incParam(param, increment = 1) {
-	increment >= 0 ? param += increment : ++param ;
+	return increment >= 0 ? param += increment : ++param ;
 }
 
 function botEatTree(botObj, frontObj, multiplier) {
@@ -586,9 +595,9 @@ class Tree {
 function becomeMineral(obj) {
 		// console.log(`ALIVE == 0`);
 		// let obj = worldMatrix[obj.x][obj.y];
+		let e = 1 * obj.energy[0],
+				m = 1 * obj.minerals[0];
 		if ((obj.energy[0] > 0) || (obj.minerals[0] > 0)) {
-			let e = 1 * obj.energy[0],
-					m = 1 * obj.minerals[0];
 					worldMatrix[obj.x][obj.y] = new Mineral(obj.x, obj.y);
 			// console.log(`CREATE MINERAL`);
 			worldMatrix[obj.x][obj.y].energy[0] = e;
@@ -605,7 +614,9 @@ function becomeMineral(obj) {
 				worldMatrix[obj.x][obj.y].minerals[0] = 1 * worldMatrix[obj.x][obj.y].minerals[1];
 			}
 		} else {
+			console.log(`ELSE ????`);
 			worldMatrix[obj.x][obj.y] = new Space(obj.x, obj.y);
+			worldEnergy += (e + m * 4);
 		}
 }
 
@@ -696,15 +707,15 @@ function treeGrowth() {
 	switch (this.genus) {
 		/* Tree genus */
 		case 'tree':
-			growthSpeed = 14;
+			growthSpeed = 2 + TREE_GROWTH_SPEED;
 			break;
 		/* Bush genus */
 		case 'bush':
-			growthSpeed = 16;
+			growthSpeed = 4 + TREE_GROWTH_SPEED;
 			break;
 		/* Bush grass */
 		case 'grass':
-			growthSpeed = 18;
+			growthSpeed = 8 + TREE_GROWTH_SPEED;
 			break;
 		default:
 			break;
@@ -938,22 +949,12 @@ addEventListener('click', (event) => {
 	let tX = Math.floor(x / GRID_SIZE),
 	  	tY = Math.floor(y / GRID_SIZE);
 	let objType = worldMatrix[tX][tY].objType;
-	// console.clear();
-	// console.log(`x: ${tX}, y: ${tY}`);
-	// console.log(`Object: ${objType}`);
 	let info = document.getElementById('info-output');
 	info.value = `x: ${tX}, y: ${tY}\nObject: ${objType}`;
 	objType == 'bot' ? info.value += `\nGenom:\n[${worldMatrix[tX][tY].genom}]` : false;
 	(objType == 'bot' || objType == 'tree') ? info.value += `\nAge:\n[${worldMatrix[tX][tY].age}]` : false;
 	(objType == 'bot' || objType == 'tree') ? info.value += `\nEnergy:\n[${worldMatrix[tX][tY].energy}]` : false;
 	(objType == 'bot' || objType == 'tree') ? info.value += `\nMinerals:\n[${worldMatrix[tX][tY].minerals}]` : false;
-	// const bot = new Bot(x, y, 'red');
-	// bot.draw();
-	// bot.generateRandomGenom();
-	// setTimeout(() => {
-	//     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGTH);
-	//     console.log('clear');
-	// }, 1000)
 });
 
 function animate() {
@@ -1230,6 +1231,20 @@ function genomVM(botObj) {
 				actCounter--;
 				console.log(`Переходим к ячейке ${adr}`);
 				break;
+/* Увеличить максимальный возраст на 2 ед */
+			case 13:
+				console.log(`Gen 13 - Увеличить макс адрес на 2 ед`);
+				botObj.longAge();
+				botDecEnergy(botObj, 1);
+				breakFlag = 1;
+				break;			
+/* Вернуть адрес смещения - случайное значение между 1 и след. адресом */
+			case 14:
+				console.log(`Gen 14 - Возвразщаем адрес смещения = случайное значение между 1 и след. адресом`);
+				adr = incAdr(adr, returnAdrShiftRandomBetweenValueNextAdr(botObj, adr));
+				actCounter--;
+				console.log(`Переходим к ячейке ${adr}`);
+				break;			
 			default:
 				console.log(`Нерабочий ген`);
 				adr = incAdr(adr);
@@ -1414,10 +1429,10 @@ function genomMutate(botObj) {
 	return botGenom;
 }
 
-// ! ToDo: добавить функцию в конец каждого хода
+
 function unshiftFlagAttacked(worldMatrix) {
-	for(let j = 0; j < worldMatrix.length; j++) {
-		for(let i = 0; i < worldMatrix[j].length; i++) {
+	for(let j = 0, xJ = worldMatrix.length; j < xJ; j++) {
+		for(let i = 0, xI = worldMatrix[j].length; i < xI; i++) {
 			let elem = worldMatrix[j][i];
 			if (elem.objType == 'bot') {
 				elem.flagAttacked.pop();
@@ -1429,9 +1444,13 @@ function unshiftFlagAttacked(worldMatrix) {
 
 // ! ToDo: добавить изменение флага атакован если получает урон от другого бота
 
-// ! ToDo: добавить ген прибавки максимальной продолжительности жизни +2 за раз
-
-// ! ToDo: добавить ген рандомного смещения, в зависимости от значения в след. ячейке (random[1, value])
+/* В зависимости  от значения в след. ячейке берем адрес смещения (random[1, value]) */
+function returnAdrShiftRandomBetweenValueNextAdr(botObj, adr) {
+	let adrShift = getRandomInt(1, botObj.genom[adr + 1]);
+	botDecEnergy(botObj, 1);
+	console.log(`${adrShift}`);
+	return adrShift > 0 ? adrShift: 1;
+}
 
 /* ############################################## */
 
@@ -1449,7 +1468,7 @@ function tick() {
 		});
 	});
 
-	timerId = setTimeout(tick, 200); // (*)
+	timerId = setTimeout(tick, render_speed); // (*)
 	worldTime++;
 	if ((worldTime >= STEPS) || (pause == 1)) {
 		clearTimeout(timerId);
@@ -1483,8 +1502,12 @@ const render_speed_picker = document.getElementById('render-speed-picker'),
 			render_speed_output = document.getElementById('render-speed-output');
 render_speed_picker.addEventListener('change', () => {
 	render_speed_output.value = render_speed_picker.value;
-	render_speed = render_speed_picker.value;
+	render_speed = 320 / render_speed_picker.value;
 	// console.log(`Render speed is: ${render_speed}`);
+});
+render_speed_output.addEventListener('change', () => {
+	render_speed_picker.value = render_speed_output.value;
+	render_speed = 320 / render_speed_picker.value;
 });
 
 /* Добавляем обработчик нажатия на кнопку Generate */
